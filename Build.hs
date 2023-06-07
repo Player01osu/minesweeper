@@ -1,3 +1,4 @@
+#!/bin/runghc
 import Script
 import System.Environment
 import System.Process

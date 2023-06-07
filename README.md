@@ -6,8 +6,7 @@ Minesweeper in C and SDL2
 ## Quickstart
 
 ```console
-$ runghc Build.hs
-$ ./target/minesweeper
+$ ./Build.hs run
 ```
 
 ### License
