@@ -1,6 +1,7 @@
 import Script
 import System.Environment
 import System.Process
+import System.Exit
 import Text.Printf
 
 targetDir :: String
@@ -34,5 +35,13 @@ compileSrc = do
    createProcess (proc cc (["-o", targetPath] <> src <> cflags))
    return ()
 
+runBinary :: IO ()
+runBinary = runCommand targetPath >>= (\_ -> return ())
+
+parseArgs :: [String] -> IO ()
+parseArgs [] = compileSrc
+parseArgs ["build"] = compileSrc
+parseArgs ["run"] = compileSrc >>= (\_ -> runBinary)
+
 main :: IO ()
-main = compileSrc
+main = getArgs >>= parseArgs
