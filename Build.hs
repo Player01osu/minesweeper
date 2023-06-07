@@ -34,7 +34,7 @@ linkingFlags = ["-I/usr/include/SDL2", "-D_REENTRANT", "-L/usr/lib", "-lSDL2"]
 compileSrc :: IO ()
 compileSrc = do
    makeTarget
-   src >>= \x -> (createProcess $ compileCommand x)
+   src >>= \x -> ((createProcess $ compileCommand x) >>= \(_, _, _, x) -> waitForProcess x)
    return ()
 
 compileCommand :: [String] -> CreateProcess
