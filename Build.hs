@@ -86,10 +86,14 @@ compileArgs obj = obj <> cFlags <> linkingFlags <> ["-o", targetPath]
 runBinary :: IO ()
 runBinary = void $ runCommand targetPath
 
+cleanWD :: IO ()
+cleanWD = runProcess "rm" ["-rf", targetDir, objDir]
+
 parseArgs :: [String] -> IO ()
 parseArgs [] = compileSrc
 parseArgs ["build"] = compileSrc
 parseArgs ["run"] = compileSrc >> runBinary
+parseArgs ["clean"] = cleanWD
 
 main :: IO ()
 main = getArgs >>= parseArgs
