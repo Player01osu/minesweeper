@@ -34,11 +34,12 @@ linkingFlags = ["-I/usr/include/SDL2", "-D_REENTRANT", "-L/usr/lib", "-lSDL2"]
 compileSrc :: IO ()
 compileSrc = do
    makeTarget
-   src >>= \x -> ((createProcess $ compileCommand x) >>= \(_, _, _, x) -> waitForProcess x)
+   src >>= \x -> ((createProcess $ compileCommand x)
+       >>= \(_, _, _, x) -> waitForProcess x)
    return ()
 
 compileCommand :: [String] -> CreateProcess
-compileCommand src = proc cc $ compileArgs src
+compileCommand = proc cc . compileArgs
 
 compileArgs :: [String] -> [String]
 compileArgs src = ["-o", targetPath] <> src <> cflags <> linkingFlags
