@@ -8,7 +8,7 @@ type Arguments = [String]
 
 sh :: String -> IO ()
 sh command = do
-   _ <- runCommand command
+   runCommand command >>= \x -> waitForProcess x
    return ()
 
 outProcess :: ProcessName -> Arguments -> IO String
