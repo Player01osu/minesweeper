@@ -28,12 +28,20 @@ cc = "clang"
 cflags :: [String]
 cflags = ["-Wall", "-Wpedantic", "-std=c99"]
 
+linkingFlags :: [String]
+linkingFlags = ["-I/usr/include/SDL2", "-D_REENTRANT", "-L/usr/lib", "-lSDL2"]
+
 compileSrc :: IO ()
 compileSrc = do
-   src <- src
    makeTarget
-   createProcess (proc cc (["-o", targetPath] <> src <> cflags))
+   src >>= \x -> (createProcess $ compileCommand x)
    return ()
+
+compileCommand :: [String] -> CreateProcess
+compileCommand src = proc cc $ compileArgs src
+
+compileArgs :: [String] -> [String]
+compileArgs src = ["-o", targetPath] <> src <> cflags <> linkingFlags
 
 runBinary :: IO ()
 runBinary = runCommand targetPath >>= (\_ -> return ())
