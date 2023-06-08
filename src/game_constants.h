@@ -5,6 +5,7 @@
 
 #define WIDTH 1280
 #define HEIGHT 720
+#define FPS 30
 
 #define BACKGROUND_COLOR 0x888888
 #define TILE_UNCLICKED_COLOR 0x111111
@@ -12,9 +13,9 @@
 #define TILE_CLICKED_MINE_COLOR 0xFF0000
 #define TILE_NUM_COLOR 0x00A1BB
 
-#define COLS 10
-#define ROWS 10
+#define COLS 20
+#define ROWS 15
 #define PAD_INNER 5
-#define PAD_OUTER 30
+#define PAD_OUTER 80
 
 #endif /* GAME_CONSTANTS_H */

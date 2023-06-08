@@ -145,24 +145,6 @@ void clear_background(Ctx *ctx)
 	SDL_RenderClear(ctx->renderer);
 }
 
-void capframerate(long *then, float *remainder)
-{
-	long wait, frameTime;
-
-	wait = 16 + *remainder;
-	*remainder -= (int)*remainder;
-	frameTime = SDL_GetTicks64() - *then;
-	wait -= frameTime;
-
-	if (wait < 1) {
-		wait = 1;
-	}
-
-	SDL_Delay(wait);
-	*remainder += 0.667;
-	*then = SDL_GetTicks64();
-}
-
 int main(int argc, char **argv)
 {
 	if (SDL_Init(SDL_INIT_EVERYTHING) != 0) {
@@ -208,7 +190,7 @@ int main(int argc, char **argv)
 		draw_grid(&ctx);
 
 		SDL_RenderPresent(ctx.renderer);
-		capframerate(&then, &remainder);
+		SDL_Delay(1000 / FPS);
 	}
 
 	destroy_ctx(ctx);
