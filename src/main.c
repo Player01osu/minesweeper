@@ -83,9 +83,7 @@ void toggle_tile(Ctx *ctx, Uint32 x, Uint32 y, bool *opening)
 
 	Tile *tile = &tiles[row][col];
 	if (*opening && tile->mine) {
-		offset_mines(ctx, tiles, row, col);
-		calculate_surround(tiles, ctx->offset);
-		printf("%d\n", ctx->offset);
+		offset_mines(tiles, row, col);
 	}
 	*opening = false;
 	tile->clicked = !tile->clicked;
@@ -161,6 +159,7 @@ int main(int argc, char **argv)
 	create_grid(ctx);
 
 	bool running = true;
+	bool opening = true;
 	while (running) {
 		clear_background(&ctx);
 		SDL_Event event;

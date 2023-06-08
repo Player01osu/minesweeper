@@ -13,8 +13,10 @@ typedef struct {
 	bool clicked;
 } Tile;
 
-void generate_mines(Tile tile[ROWS][COLS]);
+void generate_mines(Tile tiles[ROWS][COLS]);
 
-void offset_mines(void);
+void offset_mines(Tile tiles[ROWS][COLS], Uint32 row, Uint32 col);
+
+void calculate_surround(Tile tiles[ROWS][COLS]);
 
 #endif /* MINES_H */
