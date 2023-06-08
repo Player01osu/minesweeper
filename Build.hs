@@ -86,14 +86,23 @@ compileArgs obj = obj <> cFlags <> linkingFlags <> ["-o", targetPath]
 runBinary :: IO ()
 runBinary = void $ runCommand targetPath
 
-cleanWD :: IO ()
-cleanWD = runProcess "rm" ["-rf", targetDir, objDir]
+cleanWorkingDir :: IO ()
+cleanWorkingDir = runProcess "rm" ["-rf", targetDir, objDir]
+
+compileBuild :: IO ()
+compileBuild = runProcess "ghc" ["-no-keep-hi-files", "-no-keep-o-files", "Build.hs"]
+
+invalidArg :: [String] -> IO ()
+invalidArg = putStrLn . printf "Invalid argument: %s" . unlines
 
 parseArgs :: [String] -> IO ()
 parseArgs [] = compileSrc
-parseArgs ["build"] = compileSrc
-parseArgs ["run"] = compileSrc >> runBinary
-parseArgs ["clean"] = cleanWD
+parseArgs args
+   | args `elem` [["build"], ["b"]]          = compileSrc
+   | args `elem` [["run"], ["r"]]            = compileSrc >> runBinary
+   | args `elem` [["clean"], ["c"]]          = cleanWorkingDir
+   | args `elem` [["compile-build"], ["cb"]] = compileBuild
+   | otherwise                               = invalidArg args
 
 main :: IO ()
 main = getArgs >>= parseArgs
