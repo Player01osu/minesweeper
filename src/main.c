@@ -118,7 +118,7 @@ void draw_grid(Ctx *ctx)
 				set_render_color_u32(ctx, TILE_CLICKED_COLOR, SDL_ALPHA_OPAQUE);
 				SDL_RenderFillRect(ctx->renderer, &tile.rect);
 
-				//set_render_color_u32(ctx, TILE_NUM_COLOR, SDL_ALPHA_OPAQUE);
+				if (tile.surround_mines == 0) continue;
 				SDL_Color white = { 255, 255, 255 };
 				char num[] = "0";
 				num[0] = tile.surround_mines + '0';
