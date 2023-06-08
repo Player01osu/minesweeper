@@ -2,22 +2,13 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <stdbool.h>
+
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_video.h>
 #include <SDL2/SDL_events.h>
 #include <SDL2/SDL_pixels.h>
 
-#define WIDTH 1280
-#define HEIGHT 720
-
-const Uint32 BACKGROUND_COLOR = 0x888888;
-const Uint32 TILE_UNCLICKED_COLOR = 0x111111;
-const Uint32 TILE_CLICKED_COLOR = 0xFFFFFF;
-
-#define COLS 10
-#define ROWS 10
-const Uint32 PAD_INNER = 5;
-const Uint32 PAD_OUTER = 30;
+#include "game_constants.h"
 
 typedef struct {
 	SDL_Rect rect;
