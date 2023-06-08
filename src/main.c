@@ -49,7 +49,7 @@ GridCalc grid_calc(void)
 	Uint32 board_width = COLS * (rect_width + PAD_INNER);
 	Uint32 board_height = ROWS * (rect_height + PAD_INNER);
 
-	GridCalc calc = { rect_width, rect_height, board_width, board_height};
+	GridCalc calc = { rect_width, rect_height, board_width, board_height };
 	return calc;
 }
 
@@ -76,7 +76,7 @@ void toggle_tile(Ctx *ctx, Uint32 x, Uint32 y, bool *opening)
 	Uint32 board_height = calc.board_height;
 
 	Uint32 col = (x - ((WIDTH - board_width) / 2)) / (rect_width + PAD_INNER);
-	Uint32 row = (y - ((HEIGHT - board_height) / 2)) /  (rect_height + PAD_INNER);
+	Uint32 row = (y - ((HEIGHT - board_height) / 2)) / (rect_height + PAD_INNER);
 
 	if (col < 0 || col > COLS - 1 || row < 0 || row > ROWS - 1)
 		return;
@@ -116,12 +116,14 @@ void draw_grid(Ctx *ctx)
 				set_render_color_u32(ctx, TILE_CLICKED_COLOR, SDL_ALPHA_OPAQUE);
 				SDL_RenderFillRect(ctx->renderer, &tile.rect);
 
-				if (tile.surround_mines == 0) continue;
+				if (tile.surround_mines == 0)
+					continue;
 				SDL_Color white = { 255, 255, 255 };
 				char num[] = "0";
 				num[0] = tile.surround_mines + '0';
 
-				SDL_Surface *surface = TTF_RenderText_Solid(ctx->text_ctx.font, num, white);
+				SDL_Surface *surface =
+					TTF_RenderText_Solid(ctx->text_ctx.font, num, white);
 				SDL_Texture *num_text =
 					SDL_CreateTextureFromSurface(ctx->renderer, surface);
 
@@ -151,9 +153,6 @@ int main(int argc, char **argv)
 	if (TTF_Init() != 0) {
 		printf("error initializing SDL: %s\n", SDL_GetError());
 	}
-	/* control framerate */
-	long then;
-	float remainder;
 
 	Ctx ctx = ctx_new();
 	create_grid(ctx);
