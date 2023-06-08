@@ -50,7 +50,7 @@ cFlags :: [String]
 cFlags = ["-Wall", "-Wpedantic", "-std=c99"]
 
 linkingFlags :: [String]
-linkingFlags = ["-I/usr/include/SDL2", "-D_REENTRANT", "-L/usr/lib", "-lSDL2"]
+linkingFlags = ["-I/usr/include/SDL2", "-D_REENTRANT", "-L/usr/lib", "-lSDL2", "-lSDL2_ttf"]
 
 makeDir :: IO ()
 makeDir = makeTarget >> makeObj
