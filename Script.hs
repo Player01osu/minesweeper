@@ -1,6 +1,7 @@
 module Script (outProcess, outProcessLines, sh, runProcess, voidProcess) where
 
 import System.Process hiding (runProcess)
+import System.Exit
 import System.IO
 import Text.Printf
 import Control.Monad
@@ -21,15 +22,22 @@ printProc proc = putStrLn $ stringProcess (cmdspec proc)
 runProcess :: ProcessName -> Arguments -> IO ()
 runProcess process arguments = (voidProcess $ proc process arguments)
 
+exitOnFail :: IO ExitCode -> IO ()
+exitOnFail ioExitCode = ioExitCode >>= checkExitCode
+   where
+      checkExitCode ExitSuccess = return ()
+      checkExitCode fail        = exitWith fail
+
 voidProcess :: CreateProcess -> IO ()
-voidProcess process = (void $ (createProcess $ process)
-      >>= \(_, _, _, x) -> waitForProcess x) >> printProc process
+voidProcess process = printProc process >> (exitOnFail $ (createProcess $ process)
+      >>= \(_, _, _, x) -> waitForProcess x)
 
 outProcess :: ProcessName -> Arguments -> IO String
 outProcess name arguments = do
-   (_, Just hout, _, _) <-
+   (_, Just hout, _, handle) <-
       createProcess (proc name arguments) { std_out = CreatePipe }
    printProc (proc name arguments)
+   exitOnFail $ waitForProcess handle
    hGetContents hout
 
 outProcessLines :: ProcessName -> Arguments -> IO [String]
