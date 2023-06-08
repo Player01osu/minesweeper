@@ -93,7 +93,7 @@ compileBuild :: IO ()
 compileBuild = runProcess "ghc" ["-no-keep-hi-files", "-no-keep-o-files", "Build.hs"]
 
 invalidArg :: [String] -> IO ()
-invalidArg = putStrLn . printf "Invalid argument: %s" . unlines
+invalidArg = putStrLn . printf "Invalid argument: %s" . unwords
 
 parseArgs :: [String] -> IO ()
 parseArgs [] = compileSrc
