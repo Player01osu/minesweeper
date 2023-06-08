@@ -102,6 +102,8 @@ parseArgs args
    | args `elem` [["run"], ["r"]]            = compileSrc >> runBinary
    | args `elem` [["clean"], ["c"]]          = cleanWorkingDir
    | args `elem` [["compile-build"], ["cb"]] = compileBuild
+   | args `elem` [["force"], ["f"]]          = cleanWorkingDir >> compileSrc
+   | args `elem` [["force-run"], ["fr"]]     = cleanWorkingDir >> compileSrc >> runBinary
    | otherwise                               = invalidArg args
 
 main :: IO ()
