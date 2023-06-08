@@ -43,8 +43,6 @@ void generate_mines(Tile tile[ROWS][COLS])
 			tile[row][col].surround_mines = sum;
 		}
 	}
-	// Mark mines
-	// Each non-mine, check surrounding summing up all mines
 }
 
 void offset_mines(void);
