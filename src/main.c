@@ -14,7 +14,7 @@
 #include "ctx.h"
 #include "mines.h"
 
-Tile tiles[COLS][ROWS];
+Tile tiles[ROWS][COLS];
 
 SDL_Rect rect_new(int x, int y, int w, int h)
 {
@@ -30,32 +30,65 @@ SDL_Rect rect_new(int x, int y, int w, int h)
 typedef struct {
 	Uint32 rect_width;
 	Uint32 rect_height;
+	Uint32 board_width;
+	Uint32 board_height;
 } GridCalc;
+
+#define MIN(a, b) a > b ? b : a
 
 GridCalc grid_calc(void)
 {
-	Uint32 min_canvas = WIDTH > HEIGHT ? HEIGHT : WIDTH;
+	Uint32 min_canvas = MIN(WIDTH, HEIGHT);
 
 	Uint32 width_adjusted = min_canvas - PAD_OUTER - PAD_INNER * COLS;
 	Uint32 height_adjusted = min_canvas - PAD_OUTER - PAD_INNER * ROWS;
 
-	Uint32 rect_width = width_adjusted / COLS;
-	Uint32 rect_height = height_adjusted / ROWS;
+	Uint32 rect_height = MIN(height_adjusted / ROWS, width_adjusted / COLS);
+	Uint32 rect_width = MIN(height_adjusted / ROWS, width_adjusted / COLS);
 
-	GridCalc calc = { rect_width, rect_height };
+	Uint32 board_width = COLS * (rect_width + PAD_INNER);
+	Uint32 board_height = ROWS * (rect_height + PAD_INNER);
+
+	GridCalc calc = { rect_width, rect_height, board_width, board_height};
 	return calc;
 }
 
-SDL_Rect grid_rect(size_t row, size_t col)
+SDL_Rect grid_tile(size_t row, size_t col)
 {
 	GridCalc calc = grid_calc();
 	Uint32 rect_width = calc.rect_width;
 	Uint32 rect_height = calc.rect_height;
+	Uint32 board_width = calc.board_width;
+	Uint32 board_height = calc.board_height;
 
-	Uint32 x = (WIDTH / 2 - PAD_OUTER) / 2 + col * (rect_width + PAD_INNER);
-	Uint32 y = (PAD_OUTER) / 2 + row * (rect_height + PAD_INNER);
+	Uint32 x = (WIDTH - board_width) / 2 + col * (rect_width + PAD_INNER);
+	Uint32 y = (HEIGHT - board_height) / 2 + row * (rect_height + PAD_INNER);
 
 	return rect_new(x, y, rect_width, rect_height);
+}
+
+void toggle_tile(Ctx *ctx, Uint32 x, Uint32 y, bool *opening)
+{
+	GridCalc calc = grid_calc();
+	Uint32 rect_width = calc.rect_width;
+	Uint32 rect_height = calc.rect_height;
+	Uint32 board_width = calc.board_width;
+	Uint32 board_height = calc.board_height;
+
+	Uint32 col = (x - ((WIDTH - board_width) / 2)) / (rect_width + PAD_INNER);
+	Uint32 row = (y - ((HEIGHT - board_height) / 2)) /  (rect_height + PAD_INNER);
+
+	if (col < 0 || col > COLS - 1 || row < 0 || row > ROWS - 1)
+		return;
+
+	Tile *tile = &tiles[row][col];
+	if (*opening && tile->mine) {
+		offset_mines(ctx, tiles, row, col);
+		calculate_surround(tiles, ctx->offset);
+		printf("%d\n", ctx->offset);
+	}
+	*opening = false;
+	tile->clicked = !tile->clicked;
 }
 
 void create_grid(Ctx ctx)
@@ -63,7 +96,7 @@ void create_grid(Ctx ctx)
 	for (size_t row = 0; row < ROWS; ++row) {
 		for (size_t col = 0; col < COLS; ++col) {
 			Tile tile = {
-				.rect = grid_rect(row, col),
+				.rect = grid_tile(row, col),
 				.clicked = false,
 			};
 			tiles[row][col] = tile;
@@ -104,21 +137,6 @@ void draw_grid(Ctx *ctx)
 			}
 		}
 	}
-}
-
-void toggle_tile(Uint32 x, Uint32 y)
-{
-	GridCalc calc = grid_calc();
-	Uint32 rect_width = calc.rect_width;
-	Uint32 rect_height = calc.rect_height;
-	size_t col = (x - (WIDTH / 2 - PAD_OUTER) / 2) / (rect_width + PAD_INNER);
-	size_t row = (y - (PAD_OUTER) / 2) / (rect_height + PAD_INNER);
-
-	if (col < 0 || col > COLS - 1 || row < 0 || row > ROWS - 1)
-		return;
-
-	Tile *tile = &tiles[row][col];
-	tile->clicked = !tile->clicked;
 }
 
 void clear_background(Ctx *ctx)
@@ -181,7 +199,7 @@ int main(int argc, char **argv)
 				case SDL_BUTTON_LEFT: {
 					Uint32 x = event.button.x;
 					Uint32 y = event.button.y;
-					toggle_tile(x, y);
+					toggle_tile(&ctx, x, y, &opening);
 				} break;
 				}
 			}
