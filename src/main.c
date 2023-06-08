@@ -42,10 +42,7 @@ GridCalc grid_calc(void)
 	Uint32 rect_width = width_adjusted / COLS;
 	Uint32 rect_height = height_adjusted / ROWS;
 
-	GridCalc calc = {
-		rect_width,
-		rect_height
-	};
+	GridCalc calc = { rect_width, rect_height };
 	return calc;
 }
 
@@ -81,19 +78,21 @@ void draw_grid(Ctx *ctx)
 		for (size_t col = 0; col < COLS; ++col) {
 			Tile tile = tiles[row][col];
 			if (tile.clicked && tile.mine) {
-				set_render_color_u32(ctx, TILE_CLICKED_MINE_COLOR, SDL_ALPHA_OPAQUE);
+				set_render_color_u32(ctx, TILE_CLICKED_MINE_COLOR,
+						     SDL_ALPHA_OPAQUE);
 				SDL_RenderFillRect(ctx->renderer, &tile.rect);
 			} else if (tile.clicked) {
 				set_render_color_u32(ctx, TILE_CLICKED_COLOR, SDL_ALPHA_OPAQUE);
 				SDL_RenderFillRect(ctx->renderer, &tile.rect);
 
 				//set_render_color_u32(ctx, TILE_NUM_COLOR, SDL_ALPHA_OPAQUE);
-				SDL_Color white = {255, 255, 255};
+				SDL_Color white = { 255, 255, 255 };
 				char num[] = "0";
 				num[0] = tile.surround_mines + '0';
 
-				SDL_Surface *surface = TTF_RenderText_Solid(ctx->font, num, white);
-				SDL_Texture *num_text = SDL_CreateTextureFromSurface(ctx->renderer, surface);
+				SDL_Surface *surface = TTF_RenderText_Solid(ctx->text_ctx.font, num, white);
+				SDL_Texture *num_text =
+					SDL_CreateTextureFromSurface(ctx->renderer, surface);
 
 				SDL_RenderCopy(ctx->renderer, num_text, NULL, &tile.rect);
 
@@ -196,5 +195,6 @@ int main(int argc, char **argv)
 
 	destroy_ctx(ctx);
 	SDL_Quit();
+	TTF_Quit();
 	return 0;
 }

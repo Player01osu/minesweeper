@@ -6,9 +6,13 @@
 #include "game_constants.h"
 
 typedef struct {
+	TTF_Font *font;
+} TextCtx;
+
+typedef struct {
 	SDL_Window *window;
 	SDL_Renderer *renderer;
-	TTF_Font *font;
+	TextCtx text_ctx;
 } Ctx;
 
 void destroy_ctx(Ctx ctx);

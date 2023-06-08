@@ -1,7 +1,7 @@
 #include "mines.h"
 
 #define RAND_NUM 1
-#define RAND_DENOM 2
+#define RAND_DENOM 10
 
 size_t clamp(size_t num, size_t l, size_t h)
 {
@@ -15,7 +15,8 @@ void generate_mines(Tile tile[ROWS][COLS])
 	for (size_t row = 0; row < ROWS; ++row) {
 		for (size_t col = 0; col < COLS; ++col) {
 			int mine = rand() % RAND_DENOM;
-			tile[row][col].mine = mine;
+
+			if (mine < RAND_NUM) tile[row][col].mine = true;
 		}
 	}
 
