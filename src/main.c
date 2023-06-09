@@ -16,6 +16,8 @@
 
 Tile tiles[ROWS][COLS];
 
+#define MIN(a, b) a > b ? b : a
+
 SDL_Rect rect_new(int x, int y, int w, int h)
 {
 	SDL_Rect rect = {
@@ -34,7 +36,10 @@ typedef struct {
 	Uint32 board_height;
 } GridCalc;
 
-#define MIN(a, b) a > b ? b : a
+bool is_valid_idx(Uint32 row, Uint32 col)
+{
+	return col >= 0 && col < COLS && row >= 0 && row < ROWS;
+}
 
 GridCalc grid_calc(void)
 {
@@ -67,7 +72,7 @@ SDL_Rect grid_tile(size_t row, size_t col)
 	return rect_new(x, y, rect_width, rect_height);
 }
 
-void coord_to_index(Uint32 x, Uint32 y, Uint32 *row, Uint32 *col)
+void coord_to_index(Sint32 x, Sint32 y, size_t *row, size_t *col)
 {
 	GridCalc calc = grid_calc();
 	Uint32 rect_width = calc.rect_width;
@@ -80,13 +85,14 @@ void coord_to_index(Uint32 x, Uint32 y, Uint32 *row, Uint32 *col)
 }
 void expand_cavern(Ctx *ctx, Tile tiles[ROWS][COLS], size_t row, size_t col, bool *opening);
 
-void toggle_tile(Ctx *ctx, Uint32 row, Uint32 col, bool *opening)
+void toggle_tile(Ctx *ctx, size_t row, size_t col, bool *opening)
 {
-	if (col < 0 || col > COLS - 1 || row < 0 || row > ROWS - 1)
+	if (!is_valid_idx(row, col))
 		return;
 
 	Tile *tile = &tiles[row][col];
-	if (tile->clicked) return;
+	if (tile->clicked)
+		return;
 	if (tile->flagged) {
 		tile->flagged = false;
 		return;
@@ -102,12 +108,13 @@ void toggle_tile(Ctx *ctx, Uint32 row, Uint32 col, bool *opening)
 		ctx->state.lose = true;
 		return;
 	}
-	if (tile->surround_mines == 0) expand_cavern(ctx, tiles, row, col, opening);
+	if (tile->surround_mines == 0)
+		expand_cavern(ctx, tiles, row, col, opening);
 }
 
-void flag_tile(Uint32 row, Uint32 col)
+void flag_tile(size_t row, size_t col)
 {
-	if (col < 0 || col > COLS - 1 || row < 0 || row > ROWS - 1)
+	if (!is_valid_idx(row, col))
 		return;
 
 	Tile *tile = &tiles[row][col];
@@ -116,11 +123,12 @@ void flag_tile(Uint32 row, Uint32 col)
 
 void expand_cavern(Ctx *ctx, Tile tiles[ROWS][COLS], size_t row, size_t col, bool *opening)
 {
-	if (col < 0 || col > COLS - 1 || row < 0 || row > ROWS - 1)
+	if (!is_valid_idx(row, col))
 		return;
 	Tile *tile = &tiles[row][col];
 
-	if (tile->surround_mines != 0) return;
+	if (tile->surround_mines != 0)
+		return;
 
 	toggle_tile(ctx, row + 1, col + 1, opening);
 	toggle_tile(ctx, row + 1, col - 0, opening);
@@ -154,8 +162,7 @@ void draw_grid(Ctx *ctx)
 		for (size_t col = 0; col < COLS; ++col) {
 			Tile tile = tiles[row][col];
 			if (tile.flagged) {
-				set_render_color_u32(ctx, TILE_FLAGGED_COLOR,
-						     SDL_ALPHA_OPAQUE);
+				set_render_color_u32(ctx, TILE_FLAGGED_COLOR, SDL_ALPHA_OPAQUE);
 				SDL_RenderFillRect(ctx->renderer, &tile.rect);
 				continue;
 			}
@@ -229,16 +236,16 @@ int main(int argc, char **argv)
 			case SDL_MOUSEBUTTONDOWN:
 				switch (event.button.button) {
 				case SDL_BUTTON_LEFT: {
-					Uint32 x = event.button.x;
-					Uint32 y = event.button.y;
-					Uint32 row, col;
+					Sint32 x = event.button.x;
+					Sint32 y = event.button.y;
+					size_t row, col;
 					coord_to_index(x, y, &row, &col);
 					toggle_tile(&ctx, row, col, &opening);
 				} break;
 				case SDL_BUTTON_RIGHT: {
-					Uint32 x = event.button.x;
-					Uint32 y = event.button.y;
-					Uint32 row, col;
+					Sint32 x = event.button.x;
+					Sint32 y = event.button.y;
+					size_t row, col;
 					coord_to_index(x, y, &row, &col);
 					flag_tile(row, col);
 				} break;

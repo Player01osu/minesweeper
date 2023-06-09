@@ -4,6 +4,8 @@
 #define RAND_NUM 1
 #define RAND_DENOM 6
 
+bool is_valid_idx(size_t row, size_t col);
+
 size_t clamp(size_t num, size_t l, size_t h)
 {
 	if (num < l)
@@ -15,7 +17,7 @@ size_t clamp(size_t num, size_t l, size_t h)
 
 Uint8 tile_is_mine(Tile tiles[ROWS][COLS], size_t row, size_t col)
 {
-	if (row < 0 || row >= ROWS || col < 0 || col >= COLS)
+	if (!is_valid_idx(row, col))
 		return 0;
 
 	return tiles[row][col].mine;
@@ -73,7 +75,7 @@ void generate_mines(Tile tiles[ROWS][COLS])
 	calculate_surround(tiles);
 }
 
-void offset_mines(Tile tiles[ROWS][COLS], Uint32 row, Uint32 col)
+void offset_mines(Tile tiles[ROWS][COLS], size_t row, size_t col)
 {
 	Uint8 offset = 0;
 	while (tiles[row][(col + offset) % COLS].mine) {

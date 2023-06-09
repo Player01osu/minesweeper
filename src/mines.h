@@ -16,7 +16,7 @@ typedef struct {
 
 void generate_mines(Tile tiles[ROWS][COLS]);
 
-void offset_mines(Tile tiles[ROWS][COLS], Uint32 row, Uint32 col);
+void offset_mines(Tile tiles[ROWS][COLS], size_t row, size_t col);
 
 void calculate_surround(Tile tiles[ROWS][COLS]);
 
