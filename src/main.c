@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <stdbool.h>
+#include <assert.h>
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_video.h>
@@ -105,11 +106,21 @@ void toggle_tile(Ctx *ctx, size_t row, size_t col, bool *opening)
 	tile->clicked = !tile->clicked;
 
 	if (tile->mine) {
-		ctx->state.lose = true;
+		ctx->game.state = StateLose;
+		printf("You Lost\n");
 		return;
 	}
+
 	if (tile->surround_mines == 0)
 		expand_cavern(ctx, tiles, row, col, opening);
+
+	++ctx->game.tiles_clicked;
+	size_t tiles_safe = ctx->game.rows*ctx->game.cols - ctx->game.mines;
+	if (ctx->game.tiles_clicked == tiles_safe) {
+		ctx->game.state = StateWin;
+		printf("You Won\n");
+		return;
+	}
 }
 
 void flag_tile(size_t row, size_t col)
@@ -142,7 +153,7 @@ void expand_cavern(Ctx *ctx, Tile tiles[ROWS][COLS], size_t row, size_t col, boo
 	toggle_tile(ctx, row - 1, col - 1, opening);
 }
 
-void create_grid(Ctx ctx)
+void create_grid(Ctx *ctx)
 {
 	for (size_t row = 0; row < ROWS; ++row) {
 		for (size_t col = 0; col < COLS; ++col) {
@@ -153,7 +164,7 @@ void create_grid(Ctx ctx)
 			tiles[row][col] = tile;
 		}
 	}
-	generate_mines(tiles);
+	generate_mines(&ctx->game, tiles);
 }
 
 void draw_grid(Ctx *ctx)
@@ -204,6 +215,14 @@ void clear_background(Ctx *ctx)
 	SDL_RenderClear(ctx->renderer);
 }
 
+// TODO: Parse arguments such as rows and cols (ie: --size=10x10) and
+// number of mines (ie: --mines=10)
+void parse_args(int argc, char **argv)
+{
+	fprintf(stderr, "ERROR: parse_args(..) UNIMPLEMENTED");
+	assert(false);
+}
+
 int main(int argc, char **argv)
 {
 	if (SDL_Init(SDL_INIT_EVERYTHING) != 0) {
@@ -213,8 +232,16 @@ int main(int argc, char **argv)
 		printf("error initializing SDL: %s\n", SDL_GetError());
 	}
 
-	Ctx ctx = ctx_new();
-	create_grid(ctx);
+	size_t rows = ROWS;
+	size_t cols = COLS;
+	size_t mines = MINES;
+
+	if (argc > 1) {
+		parse_args(argc, argv);
+	}
+
+	Ctx ctx = ctx_new(rows, cols, mines);
+	create_grid(&ctx);
 
 	bool running = true;
 	bool opening = true;

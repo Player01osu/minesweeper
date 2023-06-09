@@ -1,9 +1,6 @@
 #include "mines.h"
 #include <time.h>
 
-#define RAND_NUM 1
-#define RAND_DENOM 6
-
 bool is_valid_idx(size_t row, size_t col);
 
 size_t clamp(size_t num, size_t l, size_t h)
@@ -60,16 +57,18 @@ void calculate_surround(Tile tiles[ROWS][COLS])
 	}
 }
 
-void generate_mines(Tile tiles[ROWS][COLS])
+void generate_mines(const Game *game, Tile tiles[ROWS][COLS])
 {
 	//srand(time(0));
-	for (size_t row = 0; row < ROWS; ++row) {
-		for (size_t col = 0; col < COLS; ++col) {
-			int mine = rand() % RAND_DENOM;
+	for (size_t i = 0; i < game->mines; ++i) {
+		size_t row = rand() % game->rows;
+		size_t col = rand() % game->cols;
 
-			if (mine < RAND_NUM)
-				tiles[row][col].mine = true;
+		// FIXME: Could hang if whole row is filled with mines.
+		while (tiles[row][col].mine) {
+			col = (col + 1) % game->cols;
 		}
+		tiles[row][col].mine = true;
 	}
 
 	calculate_surround(tiles);

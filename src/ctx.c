@@ -1,12 +1,25 @@
 #include "ctx.h"
 
-void destroy_ctx(Ctx ctx)
+static Game game_new(size_t rows, size_t cols, size_t mines)
 {
-	SDL_DestroyRenderer(ctx.renderer);
-	SDL_DestroyWindow(ctx.window);
+	Game game = {
+		.state = StatePlaying,
+		rows,
+		cols,
+		mines,
+		.tiles_clicked = 0,
+	};
+	return game;
 }
 
-Ctx ctx_new()
+void destroy_ctx(Ctx *ctx)
+{
+	SDL_DestroyRenderer(ctx->renderer);
+	SDL_DestroyWindow(ctx->window);
+}
+
+// TODO: Pass in rows, cols, and number through environment variable.
+Ctx ctx_new(size_t rows, size_t cols, size_t mines)
 {
 	SDL_Window *window = SDL_CreateWindow("TEST", SDL_WINDOWPOS_CENTERED,
 					      SDL_WINDOWPOS_CENTERED, WIDTH, HEIGHT, 0);
@@ -14,15 +27,11 @@ Ctx ctx_new()
 	TTF_Font *font = TTF_OpenFont("/usr/share/fonts/TTF/FiraMono-Medium.ttf", 240);
 	TTF_SetFontKerning(font, 1);
 
-	State state = {
-		.lose = false,
-	};
-
 	Ctx ctx = {
 		window,
 		renderer,
 		font,
-		state,
+		.game = game_new(rows, cols, mines),
 	};
 	return ctx;
 }

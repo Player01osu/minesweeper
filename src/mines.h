@@ -4,6 +4,7 @@
 #include <stdbool.h>
 #include <SDL2/SDL.h>
 #include "game_constants.h"
+#include "ctx.h"
 
 typedef struct {
 	SDL_Rect rect;
@@ -14,7 +15,7 @@ typedef struct {
 	bool flagged;
 } Tile;
 
-void generate_mines(Tile tiles[ROWS][COLS]);
+void generate_mines(const Game *game, Tile tiles[ROWS][COLS]);
 
 void offset_mines(Tile tiles[ROWS][COLS], size_t row, size_t col);
 

@@ -16,6 +16,7 @@
 
 #define COLS 10
 #define ROWS 10
+#define MINES 10
 #define PAD_INNER 1
 #define PAD_OUTER 30
 

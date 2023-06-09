@@ -10,19 +10,29 @@ typedef struct {
 	TTF_Font *font;
 } TextCtx;
 
-typedef struct {
-	bool lose;
+typedef enum {
+	StatePlaying,
+	StateWin,
+	StateLose,
 } State;
+
+typedef struct {
+	State state;
+	size_t rows;
+	size_t cols;
+	size_t mines;
+	size_t tiles_clicked;
+} Game;
 
 typedef struct {
 	SDL_Window *window;
 	SDL_Renderer *renderer;
 	TextCtx text_ctx;
-	State state;
+	Game game;
 } Ctx;
 
-void destroy_ctx(Ctx ctx);
+void destroy_ctx(Ctx *ctx);
 
-Ctx ctx_new();
+Ctx ctx_new(size_t rows, size_t cols, size_t mines);
 
 #endif /* CTX_H */
