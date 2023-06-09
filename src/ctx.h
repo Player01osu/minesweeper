@@ -3,6 +3,7 @@
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
+#include <stdbool.h>
 #include "game_constants.h"
 
 typedef struct {
@@ -10,9 +11,14 @@ typedef struct {
 } TextCtx;
 
 typedef struct {
+	bool lose;
+} State;
+
+typedef struct {
 	SDL_Window *window;
 	SDL_Renderer *renderer;
 	TextCtx text_ctx;
+	State state;
 } Ctx;
 
 void destroy_ctx(Ctx ctx);

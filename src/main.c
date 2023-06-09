@@ -67,7 +67,7 @@ SDL_Rect grid_tile(size_t row, size_t col)
 	return rect_new(x, y, rect_width, rect_height);
 }
 
-void toggle_tile(Ctx *ctx, Uint32 x, Uint32 y, bool *opening)
+void coord_to_index(Uint32 x, Uint32 y, Uint32 *row, Uint32 *col)
 {
 	GridCalc calc = grid_calc();
 	Uint32 rect_width = calc.rect_width;
@@ -75,18 +75,63 @@ void toggle_tile(Ctx *ctx, Uint32 x, Uint32 y, bool *opening)
 	Uint32 board_width = calc.board_width;
 	Uint32 board_height = calc.board_height;
 
-	Uint32 col = (x - ((WIDTH - board_width) / 2)) / (rect_width + PAD_INNER);
-	Uint32 row = (y - ((HEIGHT - board_height) / 2)) / (rect_height + PAD_INNER);
+	*row = (y - ((HEIGHT - board_height) / 2)) / (rect_height + PAD_INNER);
+	*col = (x - ((WIDTH - board_width) / 2)) / (rect_width + PAD_INNER);
+}
+void expand_cavern(Ctx *ctx, Tile tiles[ROWS][COLS], size_t row, size_t col, bool *opening);
 
+void toggle_tile(Ctx *ctx, Uint32 row, Uint32 col, bool *opening)
+{
 	if (col < 0 || col > COLS - 1 || row < 0 || row > ROWS - 1)
 		return;
 
 	Tile *tile = &tiles[row][col];
+	if (tile->clicked) return;
+	if (tile->flagged) {
+		tile->flagged = false;
+		return;
+	}
+
 	if (*opening && tile->mine) {
 		offset_mines(tiles, row, col);
 	}
 	*opening = false;
 	tile->clicked = !tile->clicked;
+
+	if (tile->mine) {
+		ctx->state.lose = true;
+		return;
+	}
+	if (tile->surround_mines == 0) expand_cavern(ctx, tiles, row, col, opening);
+}
+
+void flag_tile(Uint32 row, Uint32 col)
+{
+	if (col < 0 || col > COLS - 1 || row < 0 || row > ROWS - 1)
+		return;
+
+	Tile *tile = &tiles[row][col];
+	tile->flagged = !tile->flagged;
+}
+
+void expand_cavern(Ctx *ctx, Tile tiles[ROWS][COLS], size_t row, size_t col, bool *opening)
+{
+	if (col < 0 || col > COLS - 1 || row < 0 || row > ROWS - 1)
+		return;
+	Tile *tile = &tiles[row][col];
+
+	if (tile->surround_mines != 0) return;
+
+	toggle_tile(ctx, row + 1, col + 1, opening);
+	toggle_tile(ctx, row + 1, col - 0, opening);
+	toggle_tile(ctx, row + 1, col - 1, opening);
+
+	toggle_tile(ctx, row + 0, col + 1, opening);
+	toggle_tile(ctx, row + 0, col - 1, opening);
+
+	toggle_tile(ctx, row - 1, col + 1, opening);
+	toggle_tile(ctx, row - 1, col - 0, opening);
+	toggle_tile(ctx, row - 1, col - 1, opening);
 }
 
 void create_grid(Ctx ctx)
@@ -108,6 +153,13 @@ void draw_grid(Ctx *ctx)
 	for (size_t row = 0; row < ROWS; ++row) {
 		for (size_t col = 0; col < COLS; ++col) {
 			Tile tile = tiles[row][col];
+			if (tile.flagged) {
+				set_render_color_u32(ctx, TILE_FLAGGED_COLOR,
+						     SDL_ALPHA_OPAQUE);
+				SDL_RenderFillRect(ctx->renderer, &tile.rect);
+				continue;
+			}
+
 			if (tile.clicked && tile.mine) {
 				set_render_color_u32(ctx, TILE_CLICKED_MINE_COLOR,
 						     SDL_ALPHA_OPAQUE);
@@ -179,7 +231,16 @@ int main(int argc, char **argv)
 				case SDL_BUTTON_LEFT: {
 					Uint32 x = event.button.x;
 					Uint32 y = event.button.y;
-					toggle_tile(&ctx, x, y, &opening);
+					Uint32 row, col;
+					coord_to_index(x, y, &row, &col);
+					toggle_tile(&ctx, row, col, &opening);
+				} break;
+				case SDL_BUTTON_RIGHT: {
+					Uint32 x = event.button.x;
+					Uint32 y = event.button.y;
+					Uint32 row, col;
+					coord_to_index(x, y, &row, &col);
+					flag_tile(row, col);
 				} break;
 				}
 			}

@@ -11,6 +11,7 @@ typedef struct {
 	Uint8 surround_mines;
 	bool mine;
 	bool clicked;
+	bool flagged;
 } Tile;
 
 void generate_mines(Tile tiles[ROWS][COLS]);

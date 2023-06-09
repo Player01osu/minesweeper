@@ -1,4 +1,5 @@
 #include "mines.h"
+#include <time.h>
 
 #define RAND_NUM 1
 #define RAND_DENOM 6
@@ -59,6 +60,7 @@ void calculate_surround(Tile tiles[ROWS][COLS])
 
 void generate_mines(Tile tiles[ROWS][COLS])
 {
+	//srand(time(0));
 	for (size_t row = 0; row < ROWS; ++row) {
 		for (size_t col = 0; col < COLS; ++col) {
 			int mine = rand() % RAND_DENOM;
