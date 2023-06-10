@@ -47,7 +47,7 @@ cc :: String
 cc = "clang"
 
 cFlags :: [String]
-cFlags = ["-Wall", "-Wpedantic", "-std=c99", "-Wextra", "-fno-omit-frame-pointer", "-g"]
+cFlags = ["-Wall", "-Wpedantic", "-std=c99", "-Wextra", "-fno-omit-frame-pointer", "-g3"]
 -- "-fsanitize=address"
 
 linkingFlags :: [String]

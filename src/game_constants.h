@@ -14,9 +14,9 @@
 #define TILE_FLAGGED_COLOR 0x55BBAA
 #define TILE_NUM_COLOR 0x00A1BB
 
-#define COLS 10
-#define ROWS 10
-#define MINES 10
+#define DEFAULT_ROWS 9
+#define DEFAULT_COLS 9
+#define DEFAULT_MINES 10
 #define PAD_INNER 1
 #define PAD_OUTER 30
 

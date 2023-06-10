@@ -2,8 +2,14 @@
 
 static Game game_new(size_t rows, size_t cols, size_t mines)
 {
+	Tile **tiles = malloc(sizeof(Tile*) * (rows));
+	for (size_t i = 0; i < rows; ++i) {
+		tiles[i] = malloc(sizeof(Tile) * (cols));
+	}
+
 	Game game = {
 		.state = StatePlaying,
+		tiles,
 		rows,
 		cols,
 		mines,
@@ -14,6 +20,12 @@ static Game game_new(size_t rows, size_t cols, size_t mines)
 
 void destroy_ctx(Ctx *ctx)
 {
+	Tile **tiles = ctx->game.tiles;
+	for (size_t row = 0; row < ctx->game.rows; ++row) {
+		free(tiles[row]);
+	}
+	free(tiles);
+
 	SDL_DestroyRenderer(ctx->renderer);
 	SDL_DestroyWindow(ctx->window);
 }

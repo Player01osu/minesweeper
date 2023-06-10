@@ -17,7 +17,17 @@ typedef enum {
 } State;
 
 typedef struct {
+	SDL_Rect rect;
+	/* 0-8 */
+	Uint8 surround_mines;
+	bool mine;
+	bool clicked;
+	bool flagged;
+} Tile;
+
+typedef struct {
 	State state;
+	Tile **tiles;
 	size_t rows;
 	size_t cols;
 	size_t mines;
