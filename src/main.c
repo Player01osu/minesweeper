@@ -19,7 +19,7 @@
 
 SDL_Rect rect_new(int x, int y, int w, int h)
 {
-	SDL_Rect rect = {
+	const SDL_Rect rect = {
 		x,
 		y,
 		w,
@@ -29,10 +29,10 @@ SDL_Rect rect_new(int x, int y, int w, int h)
 }
 
 typedef struct {
-	Uint32 rect_width;
-	Uint32 rect_height;
-	Uint32 board_width;
-	Uint32 board_height;
+	const Uint32 rect_width;
+	const Uint32 rect_height;
+	const Uint32 board_width;
+	const Uint32 board_height;
 } GridCalc;
 
 bool is_valid_idx(const Game *game, size_t row, size_t col)
@@ -45,18 +45,18 @@ bool is_valid_idx(const Game *game, size_t row, size_t col)
 
 GridCalc grid_calc(const size_t rows, const size_t cols)
 {
-	Uint32 min_canvas = MIN(WIDTH, HEIGHT);
+	const Uint32 min_canvas = MIN(WIDTH, HEIGHT);
 
-	Uint32 width_adjusted = min_canvas - PAD_OUTER - PAD_INNER * cols;
-	Uint32 height_adjusted = min_canvas - PAD_OUTER - PAD_INNER * rows;
+	const Uint32 width_adjusted = min_canvas - PAD_OUTER - PAD_INNER * cols;
+	const Uint32 height_adjusted = min_canvas - PAD_OUTER - PAD_INNER * rows;
 
-	Uint32 rect_height = MIN(height_adjusted / rows, width_adjusted / cols);
-	Uint32 rect_width = MIN(height_adjusted / rows, width_adjusted / cols);
+	const Uint32 rect_height = MIN(height_adjusted / rows, width_adjusted / cols);
+	const Uint32 rect_width = MIN(height_adjusted / rows, width_adjusted / cols);
 
-	Uint32 board_width = cols * (rect_width + PAD_INNER);
-	Uint32 board_height = rows * (rect_height + PAD_INNER);
+	const Uint32 board_width = cols * (rect_width + PAD_INNER);
+	const Uint32 board_height = rows * (rect_height + PAD_INNER);
 
-	GridCalc calc = { rect_width, rect_height, board_width, board_height };
+	const GridCalc calc = { rect_width, rect_height, board_width, board_height };
 	return calc;
 }
 
@@ -117,7 +117,7 @@ void toggle_tile(Ctx *ctx, size_t row, size_t col, bool *opening)
 		expand_cavern(ctx, row, col, opening);
 
 	++ctx->game.tiles_clicked;
-	size_t tiles_safe = ctx->game.rows*ctx->game.cols - ctx->game.mines;
+	const size_t tiles_safe = ctx->game.rows*ctx->game.cols - ctx->game.mines;
 	if (ctx->game.tiles_clicked == tiles_safe) {
 		ctx->game.state = StateWin;
 		printf("You Won\n");
@@ -225,7 +225,7 @@ void clear_background(Ctx *ctx)
 // number of mines (ie: --mines=10)
 void parse_args(int argc, char **argv)
 {
-	fprintf(stderr, "ERROR: parse_args(..) UNIMPLEMENTED");
+	fprintf(stderr, "ERROR: parse_args(..) UNIMPLEMENTED\n");
 	assert(false);
 }
 
@@ -269,15 +269,15 @@ int main(int argc, char **argv)
 			case SDL_MOUSEBUTTONDOWN:
 				switch (event.button.button) {
 				case SDL_BUTTON_LEFT: {
-					Sint32 x = event.button.x;
-					Sint32 y = event.button.y;
+					const Sint32 x = event.button.x;
+					const Sint32 y = event.button.y;
 					size_t row, col;
 					coord_to_index(&ctx.game, x, y, &row, &col);
 					toggle_tile(&ctx, row, col, &opening);
 				} break;
 				case SDL_BUTTON_RIGHT: {
-					Sint32 x = event.button.x;
-					Sint32 y = event.button.y;
+					const Sint32 x = event.button.x;
+					const Sint32 y = event.button.y;
 					size_t row, col;
 					coord_to_index(&ctx.game, x, y, &row, &col);
 					flag_tile(&ctx.game, row, col);

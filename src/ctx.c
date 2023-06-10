@@ -7,7 +7,7 @@ static Game game_new(size_t rows, size_t cols, size_t mines)
 		tiles[i] = malloc(sizeof(Tile) * (cols));
 	}
 
-	Game game = {
+	const Game game = {
 		.state = StatePlaying,
 		tiles,
 		rows,
@@ -39,7 +39,7 @@ Ctx ctx_new(size_t rows, size_t cols, size_t mines)
 	TTF_Font *font = TTF_OpenFont("/usr/share/fonts/TTF/FiraMono-Medium.ttf", 240);
 	TTF_SetFontKerning(font, 1);
 
-	Ctx ctx = {
+	const Ctx ctx = {
 		window,
 		renderer,
 		font,
