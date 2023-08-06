@@ -6,7 +6,7 @@ Minesweeper in C and SDL2
 ## Quickstart
 
 ```console
-$ ./Build.hs run
+$ ./Build.hs run --release
 ```
 
 ### License
