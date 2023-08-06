@@ -21,16 +21,16 @@ srcDir = "src"
 src :: IO [String]
 src = outProcessLines "find" [srcDir, "-type", "f", "-name", "*.c"]
 
-obj :: IO [String]
-obj = outProcessLines "find" [objDir, "-type", "f"]
+obj :: String -> IO [String]
+obj objDir = outProcessLines "find" [objDir, "-type", "f"]
 
 srcs :: String -> IO [String]
 srcs objDir = do
    src <- src
-   objs <- obj
+   objs <- obj objDir
    obj <- (foldMap
       --(\file -> outProcessLines "find" $ [file] <> ["-cnewer"] <> [parseObjToSrc file objDir])
-      (\file -> outProcessLines "find" $ [file] <> ["-cnewer"] <> [parseObjToSrc file objDir])
+      (\file -> outProcessLines "find" $ [objDir] <> ["-cnewer"] <> [parseObjToSrc file objDir])
       objs)
    return $ src \\ map (\x -> parseObjToSrc x objDir) obj
 
@@ -59,12 +59,12 @@ compileSrc :: [Flag] -> IO ()
 compileSrc flag = do
    makeDir objDir targetDir
    srcs objDir >>= generateObj flags objDir
-   obj >>= voidProcess . compileCommand flags targetDir
+   obj objDir >>= voidProcess . compileCommand flags targetDir
    where
       flags = flags' flag
       flags' []               = ["-g3"]
       flags' (FlagDebug:xs)   = ["-g3"]
-      flags' (FlagRelease:xs) = ["-o2", "-ffast-math"]
+      flags' (FlagRelease:xs) = ["-O2", "-ffast-math"]
 
       objDir = objDir' flag
       objDir' []               = "obj/debug"
@@ -152,9 +152,9 @@ parseArgs args = executeSubCommand $ pairArgs subCommand flags
 
       matchFlag :: String -> Either Flag String
       matchFlag flag
-         | flag `elem` ["--debug"] = Left FlagDebug
-         | flag `elem` ["--release"]   = Left FlagRelease
-         | otherwise                   = Right $ printf "Invalid flag: %s" flag
+         | flag `elem` ["--debug"]   = Left FlagDebug
+         | flag `elem` ["--release"] = Left FlagRelease
+         | otherwise                 = Right $ printf "Invalid flag: %s" flag
 
       rawSubCmd :: [String]
       rawFlags :: [String]
