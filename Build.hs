@@ -3,11 +3,11 @@ import Script
 import System.Environment
 import System.Process hiding (runProcess)
 import System.Exit
-import Control.Monad
-import Control.Exception
+import Control.Monad (void)
 import Text.Printf
 import Data.List
 import Data.Either
+import System.Posix.Files (fileExist, getFileStatus, modificationTime)
 
 targetDir :: String
 targetDir = "target"
@@ -23,16 +23,6 @@ src = outProcessLines "find" [srcDir, "-type", "f", "-name", "*.c"]
 
 obj :: String -> IO [String]
 obj objDir = outProcessLines "find" [objDir, "-type", "f"]
-
-srcs :: String -> IO [String]
-srcs objDir = do
-   src <- src
-   objs <- obj objDir
-   obj <- (foldMap
-      --(\file -> outProcessLines "find" $ [file] <> ["-cnewer"] <> [parseObjToSrc file objDir])
-      (\file -> outProcessLines "find" $ [objDir] <> ["-cnewer"] <> [parseObjToSrc file objDir])
-      objs)
-   return $ src \\ map (\x -> parseObjToSrc x objDir) obj
 
 mkDir dir = sh $ printf "mkdir -p %s" dir
 
@@ -58,7 +48,7 @@ makeDir objDir targetDir = mkDir objDir >> mkDir targetDir
 compileSrc :: [Flag] -> IO ()
 compileSrc flag = do
    makeDir objDir targetDir
-   srcs objDir >>= generateObj flags objDir
+   generateObjFiles flags objDir
    obj objDir >>= voidProcess . compileCommand flags targetDir
    where
       flags = flags' flag
@@ -76,22 +66,41 @@ compileSrc flag = do
       targetDir' (FlagDebug:xs)   = "target/debug"
       targetDir' (FlagRelease:xs) = "target/release"
 
-parseObjToSrc :: String -> String -> String
-parseObjToSrc [] objDir = ""
-parseObjToSrc obj objDir
-   | objDir `isPrefixOf` obj = printf "%s%s.c" srcDir (takeWhile (/= '.') src)
-   | otherwise = undefined
-   where Just src = stripPrefix objDir obj
-
-parseSrcToObj :: String -> String -> String
-parseSrcToObj src objDir
+srcToObj :: String -> String -> String
+srcToObj src objDir
    | srcDir `isPrefixOf` src = printf "%s%s.o" objDir (takeWhile (/= '.') obj)
    | otherwise = undefined
    where Just obj = stripPrefix srcDir src
 
 generateObj :: [String] -> String -> [String] -> IO ()
 generateObj flags objDir =
-   foldMap (\x -> runProcess cc (["-o"] <> [parseSrcToObj x objDir] <> cFlags <> flags <> ["-c"] <> [x]))
+   foldMap (\x -> runProcess cc (["-o"] <> [srcToObj x objDir] <> cFlags <> flags <> ["-c"] <> [x]))
+
+generateObjFiles flags objDir = do
+   objs <- obj objDir
+   srcs <- src
+   updatedSrcs <- updatedSrcFiles srcs objs
+   generateObj flags objDir updatedSrcs
+
+updatedSrcFiles :: [String] -> [String] -> IO [String]
+updatedSrcFiles srcs objs = aux [] srcs objs
+   where
+      aux :: [String] -> [String] -> [String] -> IO [String]
+      aux acc [] _                  = return acc
+      aux acc srcs []               = return $ acc <> srcs
+      aux acc (src:srcs) (obj:objs) = do
+         exist <- fileExist obj
+         if not exist then aux (src:acc) srcs objs
+         else do
+            rebuild <- isNewer src obj
+            if rebuild then aux (src:acc) srcs objs
+            else aux acc srcs objs
+
+isNewer :: String -> String -> IO Bool
+isNewer a b = do
+      statusA <- getFileStatus a
+      statusB <- getFileStatus b
+      return $ modificationTime statusA > modificationTime statusB
 
 compileCommand :: [String] -> String -> [String] -> CreateProcess
 compileCommand flags targetDir = proc cc . (compileArgs flags targetDir)
@@ -110,7 +119,7 @@ cleanWorkingDir :: IO ()
 cleanWorkingDir = runProcess "rm" ["-rf", targetDir, objDir]
 
 compileBuild :: IO ()
-compileBuild = runProcess "ghc" ["-no-keep-hi-files", "-no-keep-o-files", "Build.hs"]
+compileBuild = runProcess "ghc" ["-W", "-no-keep-hi-files", "-no-keep-o-files", "Build.hs"]
 
 data SubCmd = SubCmdBuild
             | SubCmdRun
