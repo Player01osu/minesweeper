@@ -17,7 +17,7 @@
 
 #define MIN(a, b) a > b ? b : a
 
-SDL_Rect rect_new(int x, int y, int w, int h)
+static SDL_Rect rect_new(int x, int y, int w, int h)
 {
 	const SDL_Rect rect = {
 		x,
@@ -43,7 +43,7 @@ bool is_valid_idx(const Game *game, size_t row, size_t col)
 	return col >= 0 && col < cols && row >= 0 && row < rows;
 }
 
-GridCalc grid_calc(const size_t rows, const size_t cols)
+static GridCalc grid_calc(const size_t rows, const size_t cols)
 {
 	const Uint32 min_canvas = MIN(WIDTH, HEIGHT);
 
@@ -60,7 +60,7 @@ GridCalc grid_calc(const size_t rows, const size_t cols)
 	return calc;
 }
 
-SDL_Rect grid_tile(const Game *game, size_t row, size_t col)
+static SDL_Rect grid_tile(const Game *game, size_t row, size_t col)
 {
 	const GridCalc calc = grid_calc(game->rows, game->cols);
 	const Uint32 rect_width = calc.rect_width;
@@ -74,7 +74,7 @@ SDL_Rect grid_tile(const Game *game, size_t row, size_t col)
 	return rect_new(x, y, rect_width, rect_height);
 }
 
-void coord_to_index(const Game *game, const Sint32 x, const Sint32 y, size_t *row, size_t *col)
+static void coord_to_index(const Game *game, const Sint32 x, const Sint32 y, size_t *row, size_t *col)
 {
 	const GridCalc calc = grid_calc(game->rows, game->cols);
 	const Uint32 rect_width = calc.rect_width;
@@ -85,9 +85,9 @@ void coord_to_index(const Game *game, const Sint32 x, const Sint32 y, size_t *ro
 	*row = (y - ((HEIGHT - board_height) / 2)) / (rect_height + PAD_INNER);
 	*col = (x - ((WIDTH - board_width) / 2)) / (rect_width + PAD_INNER);
 }
-void expand_cavern(Ctx *ctx, size_t row, size_t col, bool *opening);
+static void expand_cavern(Ctx *ctx, const size_t row, const size_t col, bool *opening);
 
-void toggle_tile(Ctx *ctx, size_t row, size_t col, bool *opening)
+static void toggle_tile(Ctx *ctx, const size_t row, const size_t col, bool *opening)
 {
 	Tile **tiles = ctx->game.tiles;
 	if (!is_valid_idx(&ctx->game, row, col))
@@ -125,7 +125,7 @@ void toggle_tile(Ctx *ctx, size_t row, size_t col, bool *opening)
 	}
 }
 
-void flag_tile(Game *game, size_t row, size_t col)
+static void flag_tile(Game *game, size_t row, size_t col)
 {
 	if (!is_valid_idx(game, row, col))
 		return;
@@ -134,7 +134,7 @@ void flag_tile(Game *game, size_t row, size_t col)
 	tile->flagged = !tile->flagged;
 }
 
-void expand_cavern(Ctx *ctx, size_t row, size_t col, bool *opening)
+static void expand_cavern(Ctx *ctx, const size_t row, const size_t col, bool *opening)
 {
 	Tile **tiles = ctx->game.tiles;
 	if (!is_valid_idx(&ctx->game, row, col))
@@ -156,7 +156,7 @@ void expand_cavern(Ctx *ctx, size_t row, size_t col, bool *opening)
 	toggle_tile(ctx, row - 1, col - 1, opening);
 }
 
-void create_grid(Game *game)
+static void create_grid(Game *game)
 {
 	for (size_t row = 0; row < game->rows; ++row) {
 		for (size_t col = 0; col < game->cols; ++col) {
@@ -170,7 +170,7 @@ void create_grid(Game *game)
 	generate_mines(game);
 }
 
-void draw_grid(Ctx *ctx)
+static void draw_grid(Ctx *ctx)
 {
 	Tile **tiles = ctx->game.tiles;
 	const size_t rows = ctx->game.rows;
@@ -215,7 +215,7 @@ void draw_grid(Ctx *ctx)
 	}
 }
 
-void clear_background(Ctx *ctx)
+static void clear_background(Ctx *ctx)
 {
 	set_render_color_u32(ctx, BACKGROUND_COLOR, SDL_ALPHA_OPAQUE);
 	SDL_RenderClear(ctx->renderer);
@@ -223,7 +223,7 @@ void clear_background(Ctx *ctx)
 
 // TODO: Parse arguments such as rows and cols (ie: --size=10x10) and
 // number of mines (ie: --mines=10)
-void parse_args(int argc, char **argv)
+static void parse_args(int argc, char **argv)
 {
 	fprintf(stderr, "ERROR: parse_args(..) UNIMPLEMENTED\n");
 	assert(false);
@@ -260,6 +260,9 @@ int main(int argc, char **argv)
 				switch (event.key.keysym.sym) {
 				case SDLK_q:
 					running = false;
+					break;
+				case SDLK_r:
+					create_grid(&ctx.game);
 					break;
 				}
 				break;

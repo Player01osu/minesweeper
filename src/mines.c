@@ -3,7 +3,7 @@
 
 bool is_valid_idx(const Game *game, size_t row, size_t col);
 
-size_t clamp(size_t num, size_t l, size_t h)
+static const size_t clamp(const size_t num, const size_t l, const size_t h)
 {
 	if (num < l)
 		return l;
@@ -12,7 +12,7 @@ size_t clamp(size_t num, size_t l, size_t h)
 	return num;
 }
 
-Uint8 tile_is_mine(const Game *game, Sint32 row, Sint32 col)
+static const Uint8 tile_is_mine(const Game *game, const Sint32 row, const Sint32 col)
 {
 	Tile **tiles = game->tiles;
 	if (!is_valid_idx(game, row, col)) {
@@ -27,7 +27,7 @@ Uint8 tile_is_mine(const Game *game, Sint32 row, Sint32 col)
  * + + + + +
  * + + + + +
  */
-Uint8 sum_surround(Game *game, Sint32 row, Sint32 col)
+static const Uint8 sum_surround(Game *game, const Sint32 row, const Sint32 col)
 {
 	Tile **tiles = game->tiles;
 	const size_t cols = game->cols;
@@ -87,7 +87,7 @@ void generate_mines(Game *game)
 	calculate_surround(game);
 }
 
-void offset_mines(Game *game, size_t row, size_t col)
+void offset_mines(Game *game, const size_t row, const size_t col)
 {
 	Tile **tiles = game->tiles;
 	const size_t cols = game->cols;
