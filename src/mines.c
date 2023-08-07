@@ -3,7 +3,7 @@
 
 bool is_valid_idx(const Game *game, size_t row, size_t col);
 
-static const size_t clamp(const size_t num, const size_t l, const size_t h)
+static size_t clamp(const size_t num, const size_t l, const size_t h)
 {
 	if (num < l)
 		return l;
@@ -12,7 +12,7 @@ static const size_t clamp(const size_t num, const size_t l, const size_t h)
 	return num;
 }
 
-static const Uint8 tile_is_mine(const Game *game, const Sint32 row, const Sint32 col)
+static Uint8 tile_is_mine(const Game *game, const Sint32 row, const Sint32 col)
 {
 	Tile **tiles = game->tiles;
 	if (!is_valid_idx(game, row, col)) {
@@ -27,7 +27,7 @@ static const Uint8 tile_is_mine(const Game *game, const Sint32 row, const Sint32
  * + + + + +
  * + + + + +
  */
-static const Uint8 sum_surround(Game *game, const Sint32 row, const Sint32 col)
+static Uint8 sum_surround(Game *game, const Sint32 row, const Sint32 col)
 {
 	Tile **tiles = game->tiles;
 	const size_t cols = game->cols;

@@ -42,7 +42,7 @@ Ctx ctx_new(size_t rows, size_t cols, size_t mines)
 	const Ctx ctx = {
 		window,
 		renderer,
-		font,
+		{ font },
 		.game = game_new(rows, cols, mines),
 	};
 	return ctx;

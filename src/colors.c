@@ -1,6 +1,6 @@
 #include "colors.h"
 
-const Color u32_to_color(const Uint32 rgb)
+Color u32_to_color(const Uint32 rgb)
 {
 	const Uint8 r = (rgb & 0xFF0000) >> 16;
 	const Uint8 g = (rgb & 0x00FF00) >> 8;

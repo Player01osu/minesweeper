@@ -11,7 +11,7 @@ typedef struct {
 	const Uint8 b;
 } Color;
 
-const Color u32_to_color(const Uint32 rgb);
+Color u32_to_color(const Uint32 rgb);
 
 void u32_color(const Uint32 rgb, Uint8 *r, Uint8 *g, Uint8 *b);
 

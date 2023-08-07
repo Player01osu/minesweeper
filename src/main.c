@@ -87,15 +87,27 @@ static void coord_to_index(const Game *game, const Sint32 x, const Sint32 y, siz
 }
 static void expand_cavern(Ctx *ctx, const size_t row, const size_t col, bool *opening);
 
+static void lose_game(Ctx *ctx)
+{
+	Tile **tiles = ctx->game.tiles;
+	ctx->game.state = StateLose;
+
+	for (size_t row = 0; row < ctx->game.rows; ++row) {
+		for (size_t col = 0; col < ctx->game.cols; ++col) {
+			Tile *tile = &tiles[row][col];
+			if (tile->mine) tile->clicked = true;
+		}
+	}
+	printf("You Lost\n");
+}
+
 static void toggle_tile(Ctx *ctx, const size_t row, const size_t col, bool *opening)
 {
 	Tile **tiles = ctx->game.tiles;
-	if (!is_valid_idx(&ctx->game, row, col))
-		return;
+	if (!is_valid_idx(&ctx->game, row, col)) return;
 
 	Tile *tile = &tiles[row][col];
-	if (tile->clicked)
-		return;
+	if (tile->clicked) return;
 	if (tile->flagged) {
 		tile->flagged = false;
 		return;
@@ -108,8 +120,7 @@ static void toggle_tile(Ctx *ctx, const size_t row, const size_t col, bool *open
 	tile->clicked = !tile->clicked;
 
 	if (tile->mine) {
-		ctx->game.state = StateLose;
-		printf("You Lost\n");
+		lose_game(ctx);
 		return;
 	}
 
@@ -127,22 +138,22 @@ static void toggle_tile(Ctx *ctx, const size_t row, const size_t col, bool *open
 
 static void flag_tile(Game *game, size_t row, size_t col)
 {
-	if (!is_valid_idx(game, row, col))
-		return;
+	if (!is_valid_idx(game, row, col)) return;
 
 	Tile *tile = &game->tiles[row][col];
+
+	if (tile->clicked) return;
+
 	tile->flagged = !tile->flagged;
 }
 
 static void expand_cavern(Ctx *ctx, const size_t row, const size_t col, bool *opening)
 {
 	Tile **tiles = ctx->game.tiles;
-	if (!is_valid_idx(&ctx->game, row, col))
-		return;
+	if (!is_valid_idx(&ctx->game, row, col)) return;
 	Tile *tile = &tiles[row][col];
 
-	if (tile->surround_mines != 0)
-		return;
+	if (tile->surround_mines != 0) return;
 
 	toggle_tile(ctx, row + 1, col + 1, opening);
 	toggle_tile(ctx, row + 1, col - 0, opening);
@@ -156,13 +167,19 @@ static void expand_cavern(Ctx *ctx, const size_t row, const size_t col, bool *op
 	toggle_tile(ctx, row - 1, col - 1, opening);
 }
 
-static void create_grid(Game *game)
+static void create_grid(Game *game, bool *opening)
 {
+	*opening = false;
+	game->state = StatePlaying;
+	game->tiles_clicked = 0;
 	for (size_t row = 0; row < game->rows; ++row) {
 		for (size_t col = 0; col < game->cols; ++col) {
-			Tile tile = {
+			const Tile tile = {
 				.rect = grid_tile(game, row, col),
 				.clicked = false,
+				.flagged = false,
+				.mine = false,
+				.surround_mines = 0,
 			};
 			game->tiles[row][col] = tile;
 		}
@@ -194,7 +211,7 @@ static void draw_grid(Ctx *ctx)
 
 				if (tile.surround_mines == 0)
 					continue;
-				SDL_Color white = { 255, 255, 255 };
+				SDL_Color white = { 255, 255, 255, 255 };
 				char num[] = "0";
 				num[0] = tile.surround_mines + '0';
 
@@ -225,32 +242,71 @@ static void clear_background(Ctx *ctx)
 // number of mines (ie: --mines=10)
 static void parse_args(int argc, char **argv)
 {
-	fprintf(stderr, "ERROR: parse_args(..) UNIMPLEMENTED\n");
-	assert(false);
+	fprintf(stderr, "%s:%d:ERROR: parse_args(..) UNIMPLEMENTED\n", __FILE__, __LINE__);
+	exit(1);
+}
+
+static void playing_click(SDL_Event *event, Ctx *ctx, bool *opening)
+{
+	const Sint32 x = event->button.x;
+	const Sint32 y = event->button.y;
+	size_t row, col;
+	switch (event->button.button) {
+		case SDL_BUTTON_LEFT: {
+			coord_to_index(&ctx->game, x, y, &row, &col);
+			toggle_tile(ctx, row, col, opening);
+		} break;
+		case SDL_BUTTON_RIGHT: {
+			coord_to_index(&ctx->game, x, y, &row, &col);
+			flag_tile(&ctx->game, row, col);
+		} break;
+	}
+}
+
+static void handle_click(SDL_Event *event, Ctx *ctx, bool *opening)
+{
+	switch (ctx->game.state) {
+	case StatePlaying:
+		playing_click(event, ctx, opening);
+		break;
+	case StateWin:
+		break;
+	case StateLose:
+		break;
+	}
+}
+
+/* This function is called every frame. */
+static void frame_event(Ctx *ctx)
+{
+	switch (ctx->game.state) {
+	case StatePlaying:
+		break;
+	case StateWin:
+		break;
+	case StateLose:
+		break;
+	}
+
+	draw_grid(ctx);
 }
 
 int main(int argc, char **argv)
 {
-	if (SDL_Init(SDL_INIT_EVERYTHING) != 0) {
-		printf("error initializing SDL: %s\n", SDL_GetError());
-	}
-	if (TTF_Init() != 0) {
-		printf("error initializing SDL: %s\n", SDL_GetError());
-	}
+	if (SDL_Init(SDL_INIT_EVERYTHING) != 0) printf("ERROR: initializing SDL: %s\n", SDL_GetError());
+	if (TTF_Init() != 0) printf("ERROR: initializing SDL: %s\n", SDL_GetError());
 
 	size_t rows = DEFAULT_ROWS;
 	size_t cols = DEFAULT_COLS;
 	size_t mines = DEFAULT_MINES;
 
-	if (argc > 1) {
-		parse_args(argc, argv);
-	}
-
-	Ctx ctx = ctx_new(rows, cols, mines);
-	create_grid(&ctx.game);
+	if (argc > 1) parse_args(argc, argv);
 
 	bool running = true;
 	bool opening = true;
+	Ctx ctx = ctx_new(rows, cols, mines);
+	create_grid(&ctx.game, &opening);
+
 	while (running) {
 		clear_background(&ctx);
 		SDL_Event event;
@@ -262,7 +318,7 @@ int main(int argc, char **argv)
 					running = false;
 					break;
 				case SDLK_r:
-					create_grid(&ctx.game);
+					create_grid(&ctx.game, &opening);
 					break;
 				}
 				break;
@@ -270,26 +326,11 @@ int main(int argc, char **argv)
 				running = false;
 				break;
 			case SDL_MOUSEBUTTONDOWN:
-				switch (event.button.button) {
-				case SDL_BUTTON_LEFT: {
-					const Sint32 x = event.button.x;
-					const Sint32 y = event.button.y;
-					size_t row, col;
-					coord_to_index(&ctx.game, x, y, &row, &col);
-					toggle_tile(&ctx, row, col, &opening);
-				} break;
-				case SDL_BUTTON_RIGHT: {
-					const Sint32 x = event.button.x;
-					const Sint32 y = event.button.y;
-					size_t row, col;
-					coord_to_index(&ctx.game, x, y, &row, &col);
-					flag_tile(&ctx.game, row, col);
-				} break;
-				}
+				handle_click(&event, &ctx, &opening);
 			}
 		}
 
-		draw_grid(&ctx);
+		frame_event(&ctx);
 
 		SDL_RenderPresent(ctx.renderer);
 		SDL_Delay(1000 / FPS);
