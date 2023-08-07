@@ -128,7 +128,7 @@ cleanWorkingDir = runProcess "rm" ["-rf", targetDir, objDir]
 
 compileBuild :: IO ()
 compileBuild =
-  runProcess "ghc" ["-W", "-no-keep-hi-files", "-no-keep-o-files", "Build.hs"]
+  runProcess "ghc" ["-O2", "-W", "-no-keep-hi-files", "-no-keep-o-files", "Build.hs"]
 
 data SubCmd
   = SubCmdBuild
