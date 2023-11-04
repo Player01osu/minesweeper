@@ -17,6 +17,8 @@
 
 #define MIN(a, b) a > b ? b : a
 
+static void toggle_tile(Ctx *ctx, const size_t row, const size_t col);
+
 static SDL_Rect rect_new(int x, int y, int w, int h)
 {
 	const SDL_Rect rect = {
@@ -85,7 +87,7 @@ static void coord_to_index(const Game *game, const Sint32 x, const Sint32 y, siz
 	*row = (y - ((HEIGHT - board_height) / 2)) / (rect_height + PAD_INNER);
 	*col = (x - ((WIDTH - board_width) / 2)) / (rect_width + PAD_INNER);
 }
-static void expand_cavern(Ctx *ctx, const size_t row, const size_t col, bool *opening);
+static void expand_cavern(Ctx *ctx, const size_t row, const size_t col);
 
 static void lose_game(Ctx *ctx)
 {
@@ -101,13 +103,25 @@ static void lose_game(Ctx *ctx)
 	printf("You Lost\n");
 }
 
-static void toggle_tile(Ctx *ctx, const size_t row, const size_t col, bool *opening)
+Tile *tile_at(Ctx *ctx, const size_t row, const size_t col)
 {
 	Tile **tiles = ctx->game.tiles;
-	if (!is_valid_idx(&ctx->game, row, col)) return;
+	if (!is_valid_idx(&ctx->game, row, col)) return NULL;
+	return &tiles[row][col];
+}
 
-	Tile *tile = &tiles[row][col];
-	if (tile->clicked) return;
+static void click_tile(Ctx *ctx, const size_t row, const size_t col, bool *opening)
+{
+	Tile *tile = tile_at(ctx, row, col);
+	if (tile == NULL) return;
+
+	if (tile->clicked) {
+		if (sum_surround_flagged(&ctx->game, row, col) == tile->surround_mines) {
+			expand_cavern(ctx, row, col);
+		}
+		return;
+	}
+
 	if (tile->flagged) {
 		tile->flagged = false;
 		return;
@@ -117,6 +131,17 @@ static void toggle_tile(Ctx *ctx, const size_t row, const size_t col, bool *open
 		offset_mines(&ctx->game, row, col);
 	}
 	*opening = false;
+
+	toggle_tile(ctx, row, col);
+}
+
+static void toggle_tile(Ctx *ctx, const size_t row, const size_t col)
+{
+	Tile *tile = tile_at(ctx, row, col);
+	if (tile == NULL) return;
+
+	if (tile->clicked || tile->flagged) return;
+
 	tile->clicked = !tile->clicked;
 
 	if (tile->mine) {
@@ -124,8 +149,7 @@ static void toggle_tile(Ctx *ctx, const size_t row, const size_t col, bool *open
 		return;
 	}
 
-	if (tile->surround_mines == 0)
-		expand_cavern(ctx, row, col, opening);
+	if (tile->surround_mines == 0) expand_cavern(ctx, row, col);
 
 	++ctx->game.tiles_clicked;
 	const size_t tiles_safe = ctx->game.rows*ctx->game.cols - ctx->game.mines;
@@ -147,24 +171,22 @@ static void flag_tile(Game *game, size_t row, size_t col)
 	tile->flagged = !tile->flagged;
 }
 
-static void expand_cavern(Ctx *ctx, const size_t row, const size_t col, bool *opening)
+static void expand_cavern(Ctx *ctx, const size_t row, const size_t col)
 {
 	Tile **tiles = ctx->game.tiles;
 	if (!is_valid_idx(&ctx->game, row, col)) return;
 	Tile *tile = &tiles[row][col];
 
-	if (tile->surround_mines != 0) return;
+	toggle_tile(ctx, row + 1, col + 1);
+	toggle_tile(ctx, row + 1, col - 0);
+	toggle_tile(ctx, row + 1, col - 1);
 
-	toggle_tile(ctx, row + 1, col + 1, opening);
-	toggle_tile(ctx, row + 1, col - 0, opening);
-	toggle_tile(ctx, row + 1, col - 1, opening);
+	toggle_tile(ctx, row + 0, col + 1);
+	toggle_tile(ctx, row + 0, col - 1);
 
-	toggle_tile(ctx, row + 0, col + 1, opening);
-	toggle_tile(ctx, row + 0, col - 1, opening);
-
-	toggle_tile(ctx, row - 1, col + 1, opening);
-	toggle_tile(ctx, row - 1, col - 0, opening);
-	toggle_tile(ctx, row - 1, col - 1, opening);
+	toggle_tile(ctx, row - 1, col + 1);
+	toggle_tile(ctx, row - 1, col - 0);
+	toggle_tile(ctx, row - 1, col - 1);
 }
 
 static void create_grid(Game *game, bool *opening)
@@ -254,7 +276,7 @@ static void playing_click(SDL_Event *event, Ctx *ctx, bool *opening)
 	switch (event->button.button) {
 		case SDL_BUTTON_LEFT: {
 			coord_to_index(&ctx->game, x, y, &row, &col);
-			toggle_tile(ctx, row, col, opening);
+			click_tile(ctx, row, col, opening);
 		} break;
 		case SDL_BUTTON_RIGHT: {
 			coord_to_index(&ctx->game, x, y, &row, &col);
