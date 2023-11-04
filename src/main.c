@@ -3,6 +3,8 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <assert.h>
+#include <string.h>
+#include <inttypes.h>
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_video.h>
@@ -16,6 +18,9 @@
 #include "mines.h"
 
 #define MIN(a, b) a > b ? b : a
+
+#define unimplemented fprintf(stderr, "%s:%d:ERROR: %s(..) UNIMPLEMENTED\n", __FILE__, __LINE__, __func__);\
+	exit(1);
 
 static void toggle_tile(Ctx *ctx, const size_t row, const size_t col);
 
@@ -33,11 +38,24 @@ static SDL_Rect rect_new(int x, int y, int w, int h)
 }
 
 typedef struct {
+	size_t rows;
+	size_t cols;
+	size_t mines;
+} GameMeta;
+
+
+typedef struct {
 	const Uint32 rect_width;
 	const Uint32 rect_height;
 	const Uint32 board_width;
 	const Uint32 board_height;
 } GridCalc;
+
+typedef enum {
+	ParseStateSize,
+	ParseStateMines,
+	ParseStateNone,
+} ParseState;
 
 bool is_valid_idx(const Game *game, size_t row, size_t col)
 {
@@ -261,12 +279,96 @@ static void clear_background(Ctx *ctx)
 	SDL_RenderClear(ctx->renderer);
 }
 
-// TODO: Parse arguments such as rows and cols (ie: --size=10x10) and
-// number of mines (ie: --mines=10)
-static void parse_args(int argc, char **argv)
+const char *help = "\n\
+--size [rows]x[cols] \n\
+--mines [number_of_mines] \n\
+\n";
+
+static void parse_args_state(char *program, char *s, ParseState parse_state, GameMeta *meta)
 {
-	fprintf(stderr, "%s:%d:ERROR: parse_args(..) UNIMPLEMENTED\n", __FILE__, __LINE__);
-	exit(1);
+	if (strlen(s) > 31) {
+		fprintf(stderr, "%s: argument size too large '%s'\n", program , s);
+		exit(1);
+	}
+	char *p = s;
+	switch (parse_state) {
+		case ParseStateSize: {
+			char s_row[32] = {0};
+			char s_col[32] = {0};
+			char *ps_row = s_row;
+			char *ps_col = s_col;
+
+			while (*p >= '0' && *p <= '9') {
+				*ps_row = *p;
+				++ps_row;
+				++p;
+			}
+			if (*p != 'x') {
+				fprintf(stderr, "%s: Invalid size format '%s'\n", program, s);
+				fprintf(stderr, "%s", help);
+				exit(1);
+			}
+			++p;
+			while (*p >= '0' && *p <= '9') {
+				*ps_col = *p;
+				++ps_col;
+				++p;
+			}
+			if (*p != '\0') {
+				fprintf(stderr, "%s: Invalid size format '%s'\n", program, s);
+				fprintf(stderr, "%s", help);
+				fprintf(stderr, "%c\n", *p);
+				exit(1);
+			}
+			meta->rows = atoi(s_row);
+			meta->cols = atoi(s_col);
+		} break;
+		case ParseStateMines: {
+			char s_mines[32] = {0};
+			char *ps_mines = s_mines;
+			while (*p >= '0' && *p <= '9') {
+				*ps_mines = *p;
+				++ps_mines;
+				++p;
+			}
+			if (*p != '\0') {
+				fprintf(stderr, "%s: Invalid size format '%s'\n", program, s);
+				fprintf(stderr, "%s", help);
+				fprintf(stderr, "%c\n", *p);
+				exit(1);
+			}
+			meta->mines = atoi(s_mines);
+		} break;
+		case ParseStateNone: {
+			fprintf(stderr, "%s: Ambiguous command '%s'\n", program, s);
+			fprintf(stderr, "%s", help);
+			exit(1);
+		} break;
+	}
+}
+
+static void parse_args(int argc, char **argv, GameMeta *meta)
+{
+	ParseState parse_state = ParseStateNone;
+
+	for (size_t i = 1; i < (size_t)argc; ++i) {
+		if (strncmp(argv[i], "--mines", 16) == 0) {
+			parse_state = ParseStateMines;
+		} else if (strncmp(argv[i], "--size", 16) == 0) {
+			parse_state = ParseStateSize;
+		} else if (argv[i][0] == '-') {
+			fprintf(stderr, "%s: unrecognized option '%s'\n", argv[0], argv[i]);
+			fprintf(stderr, "%s", help);
+			exit(1);
+		} else {
+			parse_args_state(argv[0], argv[i], parse_state, meta);
+		}
+	}
+
+	if (meta->mines >= meta->rows * meta->cols) {
+		fprintf(stderr, "%s: too many mines\n", argv[0]);
+		exit(1);
+	}
 }
 
 static void playing_click(SDL_Event *event, Ctx *ctx, bool *opening)
@@ -316,17 +418,24 @@ static void frame_event(Ctx *ctx)
 
 int main(int argc, char **argv)
 {
-	if (SDL_Init(SDL_INIT_EVERYTHING) != 0) printf("ERROR: initializing SDL: %s\n", SDL_GetError());
-	if (TTF_Init() != 0) printf("ERROR: initializing SDL: %s\n", SDL_GetError());
+	GameMeta meta = {
+		.rows = DEFAULT_ROWS,
+		.cols = DEFAULT_COLS,
+		.mines = DEFAULT_MINES,
+	};
 
-	size_t rows = DEFAULT_ROWS;
-	size_t cols = DEFAULT_COLS;
-	size_t mines = DEFAULT_MINES;
+	if (argc > 1) parse_args(argc, argv, &meta);
 
-	if (argc > 1) parse_args(argc, argv);
+	size_t rows = meta.rows;
+	size_t cols = meta.cols;
+	size_t mines = meta.mines;
 
 	bool running = true;
 	bool opening = true;
+
+	if (SDL_Init(SDL_INIT_EVERYTHING) != 0) printf("ERROR: initializing SDL: %s\n", SDL_GetError());
+	if (TTF_Init() != 0) printf("ERROR: initializing SDL: %s\n", SDL_GetError());
+
 	Ctx ctx = ctx_new(rows, cols, mines);
 	create_grid(&ctx.game, &opening);
 
