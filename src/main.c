@@ -19,6 +19,8 @@
 
 static void toggle_tile(Ctx *ctx, const size_t row, const size_t col);
 
+static void expand_cavern(Ctx *ctx, const size_t row, const size_t col);
+
 static SDL_Rect rect_new(int x, int y, int w, int h)
 {
 	const SDL_Rect rect = {
@@ -87,7 +89,6 @@ static void coord_to_index(const Game *game, const Sint32 x, const Sint32 y, siz
 	*row = (y - ((HEIGHT - board_height) / 2)) / (rect_height + PAD_INNER);
 	*col = (x - ((WIDTH - board_width) / 2)) / (rect_width + PAD_INNER);
 }
-static void expand_cavern(Ctx *ctx, const size_t row, const size_t col);
 
 static void lose_game(Ctx *ctx)
 {
