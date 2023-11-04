@@ -426,17 +426,13 @@ int main(int argc, char **argv)
 
 	if (argc > 1) parse_args(argc, argv, &meta);
 
-	size_t rows = meta.rows;
-	size_t cols = meta.cols;
-	size_t mines = meta.mines;
-
 	bool running = true;
 	bool opening = true;
 
 	if (SDL_Init(SDL_INIT_EVERYTHING) != 0) printf("ERROR: initializing SDL: %s\n", SDL_GetError());
 	if (TTF_Init() != 0) printf("ERROR: initializing SDL: %s\n", SDL_GetError());
 
-	Ctx ctx = ctx_new(rows, cols, mines);
+	Ctx ctx = ctx_new(meta.rows, meta.cols, meta.mines);
 	create_grid(&ctx.game, &opening);
 
 	while (running) {
