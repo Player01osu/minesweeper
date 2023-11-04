@@ -317,7 +317,6 @@ static void parse_args_state(char *program, char *s, ParseState parse_state, Gam
 			if (*p != '\0') {
 				fprintf(stderr, "%s: Invalid size format '%s'\n", program, s);
 				fprintf(stderr, "%s", help);
-				fprintf(stderr, "%c\n", *p);
 				exit(1);
 			}
 			meta->rows = atoi(s_row);
