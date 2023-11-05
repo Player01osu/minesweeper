@@ -8,6 +8,8 @@
 
 typedef struct {
 	TTF_Font *font;
+	SDL_Texture **num_texts;
+
 } TextCtx;
 
 typedef enum {
@@ -26,6 +28,9 @@ typedef struct {
 } Tile;
 
 typedef struct {
+	float scale;
+	int pan_x;
+	int pan_y;
 	State state;
 	Tile **tiles;
 	size_t rows;

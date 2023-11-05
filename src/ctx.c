@@ -8,11 +8,14 @@ static Game game_new(size_t rows, size_t cols, size_t mines)
 	}
 
 	const Game game = {
+		.pan_x = -1,
+		.pan_y = 0,
+		.scale = 1.0,
 		.state = StatePlaying,
-		tiles,
-		rows,
-		cols,
-		mines,
+		.tiles = tiles,
+		.rows = rows,
+		.cols = cols,
+		.mines = mines,
 		.tiles_clicked = 0,
 	};
 	return game;
@@ -26,11 +29,15 @@ void destroy_ctx(Ctx *ctx)
 	}
 	free(tiles);
 
+	for (size_t i = 0; i < 9; ++i) {
+		SDL_DestroyTexture(ctx->text_ctx.num_texts[i]);
+	}
+	free(ctx->text_ctx.num_texts);
+
 	SDL_DestroyRenderer(ctx->renderer);
 	SDL_DestroyWindow(ctx->window);
 }
 
-// TODO: Pass in rows, cols, and number through environment variable.
 Ctx ctx_new(size_t rows, size_t cols, size_t mines)
 {
 	SDL_Window *window = SDL_CreateWindow("TEST", SDL_WINDOWPOS_CENTERED,
@@ -39,10 +46,27 @@ Ctx ctx_new(size_t rows, size_t cols, size_t mines)
 	TTF_Font *font = TTF_OpenFont("/usr/share/fonts/TTF/FiraMono-Medium.ttf", 240);
 	TTF_SetFontKerning(font, 1);
 
+	SDL_Color white = { 255, 255, 255, 255 };
+	SDL_Texture **num_texts = malloc(sizeof(SDL_Texture*) * 9);
+
+	char str[] = {'0', '\0'};
+	for (size_t i = 0; i < 9; ++i) {
+		*str = '0' + i;
+		SDL_Surface *surface =
+			TTF_RenderText_Solid(font, str, white);
+		SDL_Texture *num_text =
+			SDL_CreateTextureFromSurface(renderer, surface);
+		num_texts[i] = num_text;
+		SDL_FreeSurface(surface);
+	}
+
 	const Ctx ctx = {
-		window,
-		renderer,
-		{ font },
+		.window = window,
+		.renderer = renderer,
+		.text_ctx = {
+			.font = font,
+			.num_texts = num_texts,
+		},
 		.game = game_new(rows, cols, mines),
 	};
 	return ctx;

@@ -255,21 +255,9 @@ static void draw_grid(Ctx *ctx)
 				set_render_color_u32(ctx, TILE_CLICKED_COLOR, SDL_ALPHA_OPAQUE);
 				SDL_RenderFillRect(ctx->renderer, &tile.rect);
 
-				if (tile.surround_mines == 0)
-					continue;
-				SDL_Color white = { 255, 255, 255, 255 };
-				char num[] = "0";
-				num[0] = tile.surround_mines + '0';
+				if (tile.surround_mines == 0) continue;
 
-				SDL_Surface *surface =
-					TTF_RenderText_Solid(ctx->text_ctx.font, num, white);
-				SDL_Texture *num_text =
-					SDL_CreateTextureFromSurface(ctx->renderer, surface);
-
-				SDL_RenderCopy(ctx->renderer, num_text, NULL, &tile.rect);
-
-				SDL_FreeSurface(surface);
-				SDL_DestroyTexture(num_text);
+				SDL_RenderCopy(ctx->renderer, ctx->text_ctx.num_texts[tile.surround_mines], NULL, &tile.rect);
 			} else {
 				set_render_color_u32(ctx, TILE_UNCLICKED_COLOR, SDL_ALPHA_OPAQUE);
 				SDL_RenderFillRect(ctx->renderer, &tile.rect);
