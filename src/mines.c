@@ -107,9 +107,11 @@ void generate_mines(Game *game)
 		size_t row = rand() % game->rows;
 		size_t col = rand() % game->cols;
 
-		// FIXME: Could hang if whole row is filled with mines.
 		while (tiles[row][col].mine) {
 			col = (col + 1) % game->cols;
+			if (col == 0) {
+				row = (row + 1) % game->rows;
+			}
 		}
 		tiles[row][col].mine = true;
 	}
@@ -124,7 +126,7 @@ void offset_mines(Game *game, const size_t row, const size_t col)
 	const size_t rows = game->rows;
 
 	Uint8 offset = 0;
-	while (tiles[row][(col + offset) % cols].mine) {
+	for (int i = 0; i < cols && tiles[row][(col + offset) % cols].mine; ++i) {
 		++offset;
 	}
 
