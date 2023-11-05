@@ -104,8 +104,8 @@ static void coord_to_index(const Game *game, const Sint32 x, const Sint32 y, siz
 	const Uint32 board_width = calc.board_width;
 	const Uint32 board_height = calc.board_height;
 
-	*row = (y - ((HEIGHT - board_height) / 2)) / (rect_height + PAD_INNER);
-	*col = (x - ((WIDTH - board_width) / 2)) / (rect_width + PAD_INNER);
+	*row = ((size_t)((y + game->pan_y) / game->scale) - ((HEIGHT - board_height) / 2)) / (rect_height + PAD_INNER);
+	*col = ((size_t)((x + game->pan_x) / game->scale) - ((WIDTH - board_width) / 2)) / (rect_width + PAD_INNER);
 }
 
 static void lose_game(Ctx *ctx)
@@ -227,7 +227,6 @@ static void create_grid(Game *game, bool *opening)
 	}
 	generate_mines(game);
 }
-
 static void draw_grid(Ctx *ctx)
 {
 	Tile **tiles = ctx->game.tiles;
@@ -236,6 +235,12 @@ static void draw_grid(Ctx *ctx)
 	for (size_t row = 0; row < rows; ++row) {
 		for (size_t col = 0; col < cols; ++col) {
 			Tile tile = tiles[row][col];
+
+			tile.rect.w = tile.rect.w * ctx->game.scale;
+			tile.rect.h = tile.rect.h * ctx->game.scale;
+			tile.rect.x = tile.rect.x * ctx->game.scale - ctx->game.pan_x;
+			tile.rect.y = tile.rect.y * ctx->game.scale - ctx->game.pan_y;
+
 			if (tile.flagged) {
 				set_render_color_u32(ctx, TILE_FLAGGED_COLOR, SDL_ALPHA_OPAQUE);
 				SDL_RenderFillRect(ctx->renderer, &tile.rect);
@@ -434,6 +439,10 @@ int main(int argc, char **argv)
 	Ctx ctx = ctx_new(meta.rows, meta.cols, meta.mines);
 	create_grid(&ctx.game, &opening);
 
+	bool panned = false;
+	bool hold_down = false;
+	size_t delta_x, delta_y, start_x, start_y, mouse_x, mouse_y;
+
 	while (running) {
 		clear_background(&ctx);
 		SDL_Event event;
@@ -452,15 +461,58 @@ int main(int argc, char **argv)
 			case SDL_QUIT:
 				running = false;
 				break;
-			case SDL_MOUSEBUTTONDOWN:
-				handle_click(&event, &ctx, &opening);
+			case SDL_MOUSEMOTION: {
+				if (hold_down) {
+					delta_x = start_x - event.motion.x;
+					delta_y = start_y - event.motion.y;
+					ctx.game.pan_x = delta_x;
+					ctx.game.pan_y = delta_y;
+
+					if (delta_x != 0 || delta_y != 0) {
+						panned = true;
+					}
+				}
+				mouse_x = event.motion.x;
+				mouse_y = event.motion.y;
+			} break;
+			case SDL_MOUSEBUTTONDOWN: {
+				start_x = event.motion.x + ctx.game.pan_x;
+				start_y = event.motion.y + ctx.game.pan_y;
+				hold_down = true;
+			} break;
+			case SDL_MOUSEBUTTONUP: {
+				if (!panned) {
+					handle_click(&event, &ctx, &opening);
+				}
+				hold_down = false;
+				panned = false;
+			} break;
+			case SDL_MOUSEWHEEL: {
+				if (event.wheel.y > 0) {
+					ctx.game.scale += 0.1;
+				} else {
+					ctx.game.scale -= 0.1;
+				}
+
+#if 0				// TODO: Pan to mouse center
+				size_t width_adj = WIDTH * ctx.game.scale;
+				size_t height_adj = HEIGHT * ctx.game.scale;
+				size_t x_adj = ctx.game.pan_x;
+				size_t y_adj = ctx.game.pan_y;
+				mouse_x = mouse_x * ctx.game.scale + ctx.game.pan_x;
+				mouse_y = mouse_y * ctx.game.scale + ctx.game.pan_y;
+
+				ctx.game.pan_x = mouse_x - width_adj / 2;
+				ctx.game.pan_y = mouse_y - width_adj / 2;
+#endif
+			} break;
 			}
 		}
 
 		frame_event(&ctx);
 
 		SDL_RenderPresent(ctx.renderer);
-		SDL_Delay(1000 / FPS);
+		//SDL_Delay(1000 / FPS);
 	}
 
 	destroy_ctx(&ctx);
