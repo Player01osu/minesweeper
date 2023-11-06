@@ -43,7 +43,6 @@ typedef struct {
 	size_t mines;
 } GameMeta;
 
-
 typedef struct {
 	const Uint32 rect_width;
 	const Uint32 rect_height;
@@ -116,7 +115,7 @@ static void lose_game(Ctx *ctx)
 	for (size_t row = 0; row < ctx->game.rows; ++row) {
 		for (size_t col = 0; col < ctx->game.cols; ++col) {
 			Tile *tile = &tiles[row][col];
-			if (tile->mine) tile->clicked = true;
+			if (tile->mine) tile->state = TileStateClicked;
 		}
 	}
 	printf("You Lost\n");
@@ -134,24 +133,24 @@ static void click_tile(Ctx *ctx, const size_t row, const size_t col, bool *openi
 	Tile *tile = tile_at(ctx, row, col);
 	if (tile == NULL) return;
 
-	if (tile->clicked) {
-		if (sum_surround_flagged(&ctx->game, row, col) == tile->surround_mines) {
-			expand_cavern(ctx, row, col);
-		}
-		return;
-	}
+	switch (tile->state) {
+		case TileStateUnclicked: {
+			offset_mines(&ctx->game, row, col);
+			*opening = false;
 
-	if (tile->flagged) {
-		tile->flagged = false;
-		return;
+			toggle_tile(ctx, row, col);
+		} break;
+		case TileStateClicked: {
+			if (sum_surround_flagged(&ctx->game, row, col) == tile->surround_mines) {
+				expand_cavern(ctx, row, col);
+			}
+			return;
+		} break;
+		case TileStateFlagged: {
+			tile->state = TileStateUnclicked;
+			return;
+		} break;
 	}
-
-	if (*opening && tile->mine) {
-		offset_mines(&ctx->game, row, col);
-	}
-	*opening = false;
-
-	toggle_tile(ctx, row, col);
 }
 
 static void toggle_tile(Ctx *ctx, const size_t row, const size_t col)
@@ -159,23 +158,29 @@ static void toggle_tile(Ctx *ctx, const size_t row, const size_t col)
 	Tile *tile = tile_at(ctx, row, col);
 	if (tile == NULL) return;
 
-	if (tile->clicked || tile->flagged) return;
+	switch (tile->state) {
+		case TileStateClicked: {
+		} break;
+		case TileStateFlagged: {
+		} break;
+		case TileStateUnclicked: {
+			tile->state = TileStateClicked;
 
-	tile->clicked = !tile->clicked;
+			if (tile->mine) {
+				lose_game(ctx);
+				return;
+			}
 
-	if (tile->mine) {
-		lose_game(ctx);
-		return;
-	}
+			if (tile->surround_mines == 0) expand_cavern(ctx, row, col);
 
-	if (tile->surround_mines == 0) expand_cavern(ctx, row, col);
-
-	++ctx->game.tiles_clicked;
-	const size_t tiles_safe = ctx->game.rows*ctx->game.cols - ctx->game.mines;
-	if (ctx->game.tiles_clicked == tiles_safe) {
-		ctx->game.state = StateWin;
-		printf("You Won\n");
-		return;
+			++ctx->game.tiles_clicked;
+			const size_t tiles_safe = ctx->game.rows*ctx->game.cols - ctx->game.mines;
+			if (ctx->game.tiles_clicked == tiles_safe) {
+				ctx->game.state = StateWin;
+				printf("You Won\n");
+				return;
+			}
+		} break;
 	}
 }
 
@@ -185,9 +190,16 @@ static void flag_tile(Game *game, size_t row, size_t col)
 
 	Tile *tile = &game->tiles[row][col];
 
-	if (tile->clicked) return;
-
-	tile->flagged = !tile->flagged;
+	switch (tile->state) {
+		case TileStateClicked: {
+		} break;
+		case TileStateUnclicked: {
+			tile->state = TileStateFlagged;
+		} break;
+		case TileStateFlagged: {
+			tile->state = TileStateUnclicked;
+		} break;
+	}
 }
 
 static void expand_cavern(Ctx *ctx, const size_t row, const size_t col)
@@ -217,8 +229,7 @@ static void create_grid(Game *game, bool *opening)
 		for (size_t col = 0; col < game->cols; ++col) {
 			const Tile tile = {
 				.rect = grid_tile(game, row, col),
-				.clicked = false,
-				.flagged = false,
+				.state = TileStateUnclicked,
 				.mine = false,
 				.surround_mines = 0,
 			};
@@ -234,41 +245,45 @@ static void draw_grid(Ctx *ctx)
 	const size_t cols = ctx->game.cols;
 	for (size_t row = 0; row < rows; ++row) {
 		for (size_t col = 0; col < cols; ++col) {
-			Tile tile = tiles[row][col];
+			Tile *tile = &tiles[row][col];
+			SDL_Rect rect = tile->rect;
 
-			tile.rect.w = tile.rect.w * ctx->game.scale;
-			tile.rect.h = tile.rect.h * ctx->game.scale;
-			tile.rect.x = tile.rect.x * ctx->game.scale - ctx->game.pan_x;
-			tile.rect.y = tile.rect.y * ctx->game.scale - ctx->game.pan_y;
+			rect.w = tile->rect.w * ctx->game.scale;
+			rect.h = tile->rect.h * ctx->game.scale;
+			rect.x = tile->rect.x * ctx->game.scale - ctx->game.pan_x;
+			rect.y = tile->rect.y * ctx->game.scale - ctx->game.pan_y;
 
-			if (tile.flagged) {
-				if (ctx->game.mouse_row == row && ctx->game.mouse_col == col) {
-					set_render_color_u32(ctx, TILE_FLAGGED_HIGHLIGHT_COLOR, SDL_ALPHA_OPAQUE);
-				} else {
-					set_render_color_u32(ctx, TILE_FLAGGED_COLOR, SDL_ALPHA_OPAQUE);
-				}
-				SDL_RenderFillRect(ctx->renderer, &tile.rect);
-				continue;
-			}
+			switch (tile->state) {
+				case TileStateFlagged: {
+					if (ctx->game.mouse_row == row && ctx->game.mouse_col == col) {
+						set_render_color_u32(ctx, TILE_FLAGGED_HIGHLIGHT_COLOR, SDL_ALPHA_OPAQUE);
+					} else {
+						set_render_color_u32(ctx, TILE_FLAGGED_COLOR, SDL_ALPHA_OPAQUE);
+					}
+					SDL_RenderFillRect(ctx->renderer, &rect);
+					continue;
+				} break;
+				case TileStateClicked: {
+					if (tile->mine) {
+						set_render_color_u32(ctx, TILE_CLICKED_MINE_COLOR,
+								     SDL_ALPHA_OPAQUE);
+						SDL_RenderFillRect(ctx->renderer, &rect);
+					}
+					set_render_color_u32(ctx, TILE_CLICKED_COLOR, SDL_ALPHA_OPAQUE);
+					SDL_RenderFillRect(ctx->renderer, &rect);
 
-			if (tile.clicked && tile.mine) {
-				set_render_color_u32(ctx, TILE_CLICKED_MINE_COLOR,
-						     SDL_ALPHA_OPAQUE);
-				SDL_RenderFillRect(ctx->renderer, &tile.rect);
-			} else if (tile.clicked) {
-				set_render_color_u32(ctx, TILE_CLICKED_COLOR, SDL_ALPHA_OPAQUE);
-				SDL_RenderFillRect(ctx->renderer, &tile.rect);
+					if (tile->surround_mines == 0) continue;
 
-				if (tile.surround_mines == 0) continue;
-
-				SDL_RenderCopy(ctx->renderer, ctx->text_ctx.num_texts[tile.surround_mines], NULL, &tile.rect);
-			} else {
-				if (ctx->game.mouse_row == row && ctx->game.mouse_col == col) {
-					set_render_color_u32(ctx, TILE_UNCLICKED_HIGHLIGHT_COLOR, SDL_ALPHA_OPAQUE);
-				} else {
-					set_render_color_u32(ctx, TILE_UNCLICKED_COLOR, SDL_ALPHA_OPAQUE);
-				}
-				SDL_RenderFillRect(ctx->renderer, &tile.rect);
+					SDL_RenderCopy(ctx->renderer, ctx->text_ctx.num_texts[tile->surround_mines], NULL, &rect);
+				} break;
+				case TileStateUnclicked: {
+					if (ctx->game.mouse_row == row && ctx->game.mouse_col == col) {
+						set_render_color_u32(ctx, TILE_UNCLICKED_HIGHLIGHT_COLOR, SDL_ALPHA_OPAQUE);
+					} else {
+						set_render_color_u32(ctx, TILE_UNCLICKED_COLOR, SDL_ALPHA_OPAQUE);
+					}
+					SDL_RenderFillRect(ctx->renderer, &rect);
+				} break;
 			}
 		}
 	}

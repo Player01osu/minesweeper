@@ -6,25 +6,29 @@
 #include <stdbool.h>
 #include "game_constants.h"
 
-typedef struct {
-	TTF_Font *font;
-	SDL_Texture **num_texts;
-
-} TextCtx;
-
 typedef enum {
 	StatePlaying,
 	StateWin,
 	StateLose,
 } State;
 
+typedef enum {
+	TileStateUnclicked,
+	TileStateClicked,
+	TileStateFlagged,
+} TileState;
+
+typedef struct {
+	TTF_Font *font;
+	SDL_Texture **num_texts;
+} TextCtx;
+
 typedef struct {
 	SDL_Rect rect;
 	/* 0-8 */
 	Uint8 surround_mines;
 	bool mine;
-	bool clicked;
-	bool flagged;
+	TileState state;
 } Tile;
 
 typedef struct {

@@ -29,7 +29,7 @@ static Uint8 tile_is_flagged(const Game *game, const Sint32 row, const Sint32 co
 		return 0;
 	}
 
-	return tiles[row][col].flagged;
+	return tiles[row][col].state == TileStateFlagged;
 }
 
 static Uint8 sum_surround_mines(Game *game, const Sint32 row, const Sint32 col)
@@ -126,7 +126,7 @@ void offset_mines(Game *game, const size_t row, const size_t col)
 	const size_t rows = game->rows;
 
 	Uint8 offset = 0;
-	for (int i = 0; i < cols && tiles[row][(col + offset) % cols].mine; ++i) {
+	for (size_t i = 0; i < cols && tiles[row][(col + offset) % cols].mine; ++i) {
 		++offset;
 	}
 
