@@ -31,6 +31,8 @@ typedef struct {
 	float scale;
 	int pan_x;
 	int pan_y;
+	size_t mouse_row;
+	size_t mouse_col;
 	State state;
 	Tile **tiles;
 	size_t rows;

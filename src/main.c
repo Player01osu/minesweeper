@@ -242,7 +242,11 @@ static void draw_grid(Ctx *ctx)
 			tile.rect.y = tile.rect.y * ctx->game.scale - ctx->game.pan_y;
 
 			if (tile.flagged) {
-				set_render_color_u32(ctx, TILE_FLAGGED_COLOR, SDL_ALPHA_OPAQUE);
+				if (ctx->game.mouse_row == row && ctx->game.mouse_col == col) {
+					set_render_color_u32(ctx, TILE_FLAGGED_HIGHLIGHT_COLOR, SDL_ALPHA_OPAQUE);
+				} else {
+					set_render_color_u32(ctx, TILE_FLAGGED_COLOR, SDL_ALPHA_OPAQUE);
+				}
 				SDL_RenderFillRect(ctx->renderer, &tile.rect);
 				continue;
 			}
@@ -259,7 +263,11 @@ static void draw_grid(Ctx *ctx)
 
 				SDL_RenderCopy(ctx->renderer, ctx->text_ctx.num_texts[tile.surround_mines], NULL, &tile.rect);
 			} else {
-				set_render_color_u32(ctx, TILE_UNCLICKED_COLOR, SDL_ALPHA_OPAQUE);
+				if (ctx->game.mouse_row == row && ctx->game.mouse_col == col) {
+					set_render_color_u32(ctx, TILE_UNCLICKED_HIGHLIGHT_COLOR, SDL_ALPHA_OPAQUE);
+				} else {
+					set_render_color_u32(ctx, TILE_UNCLICKED_COLOR, SDL_ALPHA_OPAQUE);
+				}
 				SDL_RenderFillRect(ctx->renderer, &tile.rect);
 			}
 		}
@@ -462,6 +470,13 @@ int main(int argc, char **argv)
 				}
 				mouse_x = event.motion.x;
 				mouse_y = event.motion.y;
+				coord_to_index(
+					&ctx.game,
+					mouse_x,
+					mouse_y,
+					&ctx.game.mouse_row,
+					&ctx.game.mouse_col
+				);
 			} break;
 			case SDL_MOUSEBUTTONDOWN: {
 				start_x = event.motion.x + ctx.game.pan_x;

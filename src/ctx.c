@@ -8,8 +8,10 @@ static Game game_new(size_t rows, size_t cols, size_t mines)
 	}
 
 	const Game game = {
-		.pan_x = -1,
+		.pan_x = 0,
 		.pan_y = 0,
+		.mouse_row = 0,
+		.mouse_col = 0,
 		.scale = 1.0,
 		.state = StatePlaying,
 		.tiles = tiles,
