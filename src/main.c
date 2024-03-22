@@ -444,7 +444,7 @@ int main(int argc, char **argv)
 	bool running = true;
 	bool opening = true;
 
-	if (SDL_Init(SDL_INIT_EVERYTHING) != 0) printf("ERROR: initializing SDL: %s\n", SDL_GetError());
+	if (SDL_Init(SDL_INIT_VIDEO) != 0) printf("ERROR: initializing SDL: %s\n", SDL_GetError());
 	if (TTF_Init() != 0) printf("ERROR: initializing SDL: %s\n", SDL_GetError());
 
 	Ctx ctx = ctx_new(meta.rows, meta.cols, meta.mines);
