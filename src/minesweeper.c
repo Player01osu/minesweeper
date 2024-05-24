@@ -1,20 +1,11 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdint.h>
-#include <stdbool.h>
-#include <assert.h>
-#include <string.h>
-#include <inttypes.h>
-
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_video.h>
 #include <SDL2/SDL_events.h>
 #include <SDL2/SDL_pixels.h>
 #include <SDL2/SDL_ttf.h>
 
-#include "game_constants.h"
+#include "minesweeper.h"
 #include "colors.h"
-#include "ctx.h"
 #include "mines.h"
 
 #define MIN(a, b) a > b ? b : a
@@ -64,9 +55,9 @@ bool is_valid_idx(const Game *game, size_t row, size_t col)
 	return col >= 0 && col < cols && row >= 0 && row < rows;
 }
 
-static GridCalc grid_calc(const size_t rows, const size_t cols)
+static GridCalc grid_calc(const SDL_Rect layout, const size_t rows, const size_t cols)
 {
-	const Uint32 min_canvas = MIN(WIDTH, HEIGHT);
+	const Uint32 min_canvas = MIN(layout.w, layout.h);
 
 	const Uint32 width_adjusted = min_canvas - PAD_OUTER - PAD_INNER * cols;
 	const Uint32 height_adjusted = min_canvas - PAD_OUTER - PAD_INNER * rows;
@@ -83,7 +74,7 @@ static GridCalc grid_calc(const size_t rows, const size_t cols)
 
 static SDL_Rect grid_tile(const Game *game, size_t row, size_t col)
 {
-	const GridCalc calc = grid_calc(game->rows, game->cols);
+	const GridCalc calc = grid_calc(game->game_layout, game->rows, game->cols);
 	const Uint32 rect_width = calc.rect_width;
 	const Uint32 rect_height = calc.rect_height;
 	const Uint32 board_width = calc.board_width;
@@ -97,7 +88,7 @@ static SDL_Rect grid_tile(const Game *game, size_t row, size_t col)
 
 static void coord_to_index(const Game *game, const Sint32 x, const Sint32 y, size_t *row, size_t *col)
 {
-	const GridCalc calc = grid_calc(game->rows, game->cols);
+	const GridCalc calc = grid_calc(game->game_layout, game->rows, game->cols);
 	const Uint32 rect_width = calc.rect_width;
 	const Uint32 rect_height = calc.rect_height;
 	const Uint32 board_width = calc.board_width;
@@ -428,6 +419,7 @@ static void frame_event(Ctx *ctx)
 		break;
 	}
 
+	SDL_RenderSetClipRect(ctx->renderer, &ctx->game.game_layout);
 	draw_grid(ctx);
 }
 

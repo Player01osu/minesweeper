@@ -3,7 +3,7 @@
 
 #include <stdbool.h>
 #include <SDL2/SDL.h>
-#include "game_constants.h"
+#include "minesweeper.h"
 #include "ctx.h"
 
 void generate_mines(Game *game);

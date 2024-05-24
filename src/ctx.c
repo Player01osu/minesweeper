@@ -19,6 +19,12 @@ static Game game_new(size_t rows, size_t cols, size_t mines)
 		.cols = cols,
 		.mines = mines,
 		.tiles_clicked = 0,
+		.game_layout = {
+			.w = WIDTH * 7 / 8,
+			.h = HEIGHT * 7 / 8,
+			.x = 0,
+			.y = 0,
+		}
 	};
 	return game;
 }

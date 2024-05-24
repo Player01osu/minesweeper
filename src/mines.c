@@ -1,8 +1,6 @@
 #include "mines.h"
 #include <time.h>
 
-bool is_valid_idx(const Game *game, size_t row, size_t col);
-
 static size_t clamp(const size_t num, const size_t l, const size_t h)
 {
 	if (num < l)
