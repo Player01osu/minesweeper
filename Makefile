@@ -1,17 +1,17 @@
 CC := clang
 CFLAGS := -Wall -Wextra -Wpedantic -std=c99 -ggdb
-SRCS := $(shell find src -name *.c -type f)
+SRCS := $(wildcard src/*.c)
 OBJS := $(patsubst src/%.c, target/debug/%.o, $(SRCS))
 DEPS := $(patsubst src/%.c, target/debug/%.d, $(SRCS))
-LINKING := -lSDL2 -lSDL2_ttf -L/usr/lib -I/usr/include/SDL2 -D_REENTRANT
+LINKING := -lm -lSDL2 -lSDL2_ttf -L/usr/lib -I/usr/include/SDL2 -D_REENTRANT
 
 EXEC := target/debug/minesweeper
 
-.PHONY: all clean
-
--include $(DEPS)
+#.PHONY: all clean
 
 all: $(EXEC)
+
+-include $(DEPS)
 
 run: all
 	$(EXEC)

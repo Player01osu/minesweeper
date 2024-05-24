@@ -15,6 +15,6 @@ Color u32_to_color(const Uint32 rgb);
 
 void u32_color(const Uint32 rgb, Uint8 *r, Uint8 *g, Uint8 *b);
 
-void set_render_color_u32(const Ctx *ctx, const Uint32 rgb, const Uint8 alpha);
+void set_render_color_u32(const Uint32 rgb, const Uint8 alpha);
 
 #endif /* COLORS_H */

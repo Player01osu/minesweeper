@@ -1,13 +1,13 @@
 #include "ctx.h"
 
-static Game game_new(size_t rows, size_t cols, size_t mines)
+static void game_init(size_t rows, size_t cols, size_t mines)
 {
-	Tile **tiles = malloc(sizeof(Tile*) * (rows));
+	Tile **tiles = malloc(sizeof(*tiles) * (rows));
 	for (size_t i = 0; i < rows; ++i) {
-		tiles[i] = malloc(sizeof(Tile) * (cols));
+		tiles[i] = calloc(cols, sizeof(*tiles[i]));
 	}
 
-	const Game game = {
+	game = (Game){
 		.pan_x = 0,
 		.pan_y = 0,
 		.mouse_row = 0,
@@ -26,56 +26,73 @@ static Game game_new(size_t rows, size_t cols, size_t mines)
 			.y = 0,
 		}
 	};
-	return game;
 }
 
-void destroy_ctx(Ctx *ctx)
+void ctx_free(void)
 {
-	Tile **tiles = ctx->game.tiles;
-	for (size_t row = 0; row < ctx->game.rows; ++row) {
+	Tile **tiles = game.tiles;
+	for (size_t row = 0; row < game.rows; ++row) {
 		free(tiles[row]);
 	}
 	free(tiles);
 
 	for (size_t i = 0; i < 9; ++i) {
-		SDL_DestroyTexture(ctx->text_ctx.num_texts[i]);
+		SDL_DestroyTexture(text_ctx.num_texts[i]);
 	}
-	free(ctx->text_ctx.num_texts);
+	free(text_ctx.num_texts);
 
-	SDL_DestroyRenderer(ctx->renderer);
-	SDL_DestroyWindow(ctx->window);
+	SDL_DestroyRenderer(renderer);
+	SDL_DestroyWindow(window);
 }
 
-Ctx ctx_new(size_t rows, size_t cols, size_t mines)
+void ctx_init(size_t rows, size_t cols, size_t mines)
 {
-	SDL_Window *window = SDL_CreateWindow("TEST", SDL_WINDOWPOS_CENTERED,
+	window = SDL_CreateWindow("TEST", SDL_WINDOWPOS_CENTERED,
 					      SDL_WINDOWPOS_CENTERED, WIDTH, HEIGHT, 0);
-	SDL_Renderer *renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
+	if (!window) {
+		fprintf(stderr, "Failed to init window\n");
+		exit(1);
+	}
+	renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
+	if (!renderer) {
+		fprintf(stderr, "Failed to init renderer");
+		SDL_DestroyWindow(window);
+		exit(1);
+	}
 	TTF_Font *font = TTF_OpenFont("/usr/share/fonts/TTF/FiraMono-Medium.ttf", 240);
+	if (!font) {
+		fprintf(stderr, "Failed to init font");
+		SDL_DestroyWindow(window);
+		SDL_DestroyRenderer(renderer);
+		exit(1);
+	}
 	TTF_SetFontKerning(font, 1);
 
 	SDL_Color white = { 255, 255, 255, 255 };
-	SDL_Texture **num_texts = malloc(sizeof(SDL_Texture*) * 9);
+	SDL_Texture **num_texts = malloc(sizeof(*num_texts) * 9);
 
 	char str[] = {'0', '\0'};
 	for (size_t i = 0; i < 9; ++i) {
 		*str = '0' + i;
 		SDL_Surface *surface =
 			TTF_RenderText_Solid(font, str, white);
+		if (!surface) {
+			fprintf(stderr, "ERROR: Failed to create surface: %s\n", SDL_GetError());
+			exit(1);
+		}
 		SDL_Texture *num_text =
 			SDL_CreateTextureFromSurface(renderer, surface);
+		if (!num_text) {
+			fprintf(stderr, "ERROR: Failed to create num texture: %s\n", SDL_GetError());
+			exit(1);
+		}
 		num_texts[i] = num_text;
 		SDL_FreeSurface(surface);
 	}
 
-	const Ctx ctx = {
-		.window = window,
-		.renderer = renderer,
-		.text_ctx = {
-			.font = font,
-			.num_texts = num_texts,
-		},
-		.game = game_new(rows, cols, mines),
+	game_init(rows, cols, mines);
+	text_ctx = (TextCtx){
+		.font = font,
+		.num_texts = num_texts,
 	};
-	return ctx;
 }

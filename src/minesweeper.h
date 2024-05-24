@@ -14,8 +14,11 @@
 
 #include "ctx.h"
 
-#define WIDTH  1920
-#define HEIGHT 1080
+//#define WIDTH  1920
+//#define HEIGHT 1080
+
+#define WIDTH  1280
+#define HEIGHT 720
 #define FPS    30
 
 #define BACKGROUND_COLOR                0x444444
@@ -73,17 +76,11 @@ typedef struct {
 	SDL_Rect game_layout;
 } Game;
 
-typedef struct {
-	SDL_Window *window;
-	SDL_Renderer *renderer;
-	TextCtx text_ctx;
-	Game game;
-} Ctx;
+extern SDL_Window *window;
+extern SDL_Renderer *renderer;
+extern TextCtx text_ctx;
+extern Game game;
 
-void destroy_ctx(Ctx *ctx);
-
-Ctx ctx_new(size_t rows, size_t cols, size_t mines);
-
-bool is_valid_idx(const Game *game, size_t row, size_t col);
+bool is_valid_idx(size_t row, size_t col);
 
 #endif /* MINESWEEPER_H */

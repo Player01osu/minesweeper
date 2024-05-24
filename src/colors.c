@@ -1,4 +1,5 @@
 #include "colors.h"
+#include "state.h"
 
 Color u32_to_color(const Uint32 rgb)
 {
@@ -22,10 +23,13 @@ void u32_color(const Uint32 rgb, Uint8 *r, Uint8 *g, Uint8 *b)
 	*b = color.b;
 }
 
-void set_render_color_u32(const Ctx *ctx, const Uint32 rgb, const Uint8 alpha)
+void set_render_color_u32(const Uint32 rgb, const Uint8 alpha)
 {
 	Uint8 r, g, b;
 	u32_color(rgb, &r, &g, &b);
-	SDL_SetRenderDrawColor(ctx->renderer, r, g, b, alpha);
+	if (SDL_SetRenderDrawColor(renderer, r, g, b, alpha) < 0) {
+		fprintf(stderr, "ERROR:Failed to set draw color:%s\n", SDL_GetError());
+		exit(1);
+	}
 }
 
