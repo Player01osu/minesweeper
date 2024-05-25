@@ -84,6 +84,7 @@ generateObj flags objDir =
 generateObjFiles flags objDir = do
   objs <- obj objDir
   srcs <- src
+  _ <- updatedSrcFiles (map (\x -> (takeWhile (/= '.') x) <> ".h") srcs) objs
   updatedSrcs <- updatedSrcFiles srcs objs
   generateObj flags objDir updatedSrcs
 
