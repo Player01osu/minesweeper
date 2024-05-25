@@ -50,7 +50,7 @@ typedef enum {
 
 typedef struct {
 	TTF_Font *font;
-	SDL_Texture **num_texts;
+	SDL_Texture *num_texts[10];
 } TextCtx;
 
 typedef struct {

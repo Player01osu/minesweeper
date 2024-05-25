@@ -39,7 +39,6 @@ void ctx_free(void)
 	for (size_t i = 0; i < 9; ++i) {
 		SDL_DestroyTexture(text_ctx.num_texts[i]);
 	}
-	free(text_ctx.num_texts);
 
 	SDL_DestroyRenderer(renderer);
 	SDL_DestroyWindow(window);
@@ -67,32 +66,26 @@ void ctx_init(size_t rows, size_t cols, size_t mines)
 		exit(1);
 	}
 	TTF_SetFontKerning(font, 1);
+	text_ctx.font = font;
 
 	SDL_Color white = { 255, 255, 255, 255 };
-	SDL_Texture **num_texts = malloc(sizeof(*num_texts) * 9);
 
 	char str[] = {'0', '\0'};
 	for (size_t i = 0; i < 9; ++i) {
 		*str = '0' + i;
-		SDL_Surface *surface =
-			TTF_RenderText_Solid(font, str, white);
+		SDL_Surface *surface = TTF_RenderText_Solid(font, str, white);
 		if (!surface) {
 			fprintf(stderr, "ERROR: Failed to create surface: %s\n", SDL_GetError());
 			exit(1);
 		}
-		SDL_Texture *num_text =
-			SDL_CreateTextureFromSurface(renderer, surface);
+		SDL_Texture *num_text = SDL_CreateTextureFromSurface(renderer, surface);
 		if (!num_text) {
 			fprintf(stderr, "ERROR: Failed to create num texture: %s\n", SDL_GetError());
 			exit(1);
 		}
-		num_texts[i] = num_text;
+		text_ctx.num_texts[i] = num_text;
 		SDL_FreeSurface(surface);
 	}
 
 	game_init(rows, cols, mines);
-	text_ctx = (TextCtx){
-		.font = font,
-		.num_texts = num_texts,
-	};
 }
