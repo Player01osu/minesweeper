@@ -92,18 +92,12 @@ void process_events(void)
 			_mouse_y = event.motion.y;
 			break;
 		case SDL_MOUSEBUTTONDOWN:
-			if (event.button.button == 1) {
-				leftdown = true;
-			} else if (event.button.button == 3) {
-				rightdown = true;
-			}
+			leftdown = event.button.button == 1;
+			rightdown = event.button.button == 3;
 			break;
 		case SDL_MOUSEBUTTONUP:
-			if (event.button.button == 1) {
-				leftup = true;
-			} else if (event.button.button == 3) {
-				rightup = true;
-			}
+			leftup = event.button.button == 1;
+			rightup = event.button.button == 3;
 			break;
 		case SDL_MOUSEWHEEL:
 			_wheel_y = event.wheel.y;

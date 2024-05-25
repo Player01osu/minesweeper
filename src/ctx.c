@@ -46,8 +46,8 @@ void ctx_free(void)
 
 void ctx_init(size_t rows, size_t cols, size_t mines)
 {
-	window = SDL_CreateWindow("TEST", SDL_WINDOWPOS_CENTERED,
-					      SDL_WINDOWPOS_CENTERED, WIDTH, HEIGHT, 0);
+	window = SDL_CreateWindow("TEST", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
+			          WIDTH, HEIGHT, 0);
 	if (!window) {
 		fprintf(stderr, "Failed to init window\n");
 		exit(1);
