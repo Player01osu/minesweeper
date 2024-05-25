@@ -257,9 +257,9 @@ static void draw_grid(void)
 			switch (tile->state) {
 			case TileStateFlagged:
 				if (game.mouse_row == row && game.mouse_col == col) {
-					set_render_color_u32(TILE_FLAGGED_HIGHLIGHT_COLOR, SDL_ALPHA_OPAQUE);
+					set_render_color_u32(TILE_FLAGGED_HIGHLIGHT_COLOR);
 				} else {
-					set_render_color_u32(TILE_FLAGGED_COLOR, SDL_ALPHA_OPAQUE);
+					set_render_color_u32(TILE_FLAGGED_COLOR);
 				}
 				if (SDL_RenderFillRect(renderer, &rect) < 0) {
 					fprintf(stderr, "ERROR: Failed to fill tile: %s", SDL_GetError());
@@ -268,12 +268,11 @@ static void draw_grid(void)
 				break;
 			case TileStateClicked:
 				if (tile->mine) {
-					set_render_color_u32(TILE_CLICKED_MINE_COLOR,
-							     SDL_ALPHA_OPAQUE);
+					set_render_color_u32(TILE_CLICKED_MINE_COLOR);
 					SDL_RenderFillRect(renderer, &rect);
 					continue;
 				}
-				set_render_color_u32(TILE_CLICKED_COLOR, SDL_ALPHA_OPAQUE);
+				set_render_color_u32(TILE_CLICKED_COLOR);
 				SDL_RenderFillRect(renderer, &rect);
 
 				/* Don't draw number when tile isn't surrounded by mines */
@@ -283,9 +282,9 @@ static void draw_grid(void)
 				break;
 			case TileStateUnclicked:
 				if (game.mouse_row == row && game.mouse_col == col) {
-					set_render_color_u32(TILE_UNCLICKED_HIGHLIGHT_COLOR, SDL_ALPHA_OPAQUE);
+					set_render_color_u32(TILE_UNCLICKED_HIGHLIGHT_COLOR);
 				} else {
-					set_render_color_u32(TILE_UNCLICKED_COLOR, SDL_ALPHA_OPAQUE);
+					set_render_color_u32(TILE_UNCLICKED_COLOR);
 				}
 				if (SDL_RenderFillRect(renderer, &rect) < 0) {
 					fprintf(stderr, "ERROR: Failed to fill tile: %s", SDL_GetError());
@@ -299,7 +298,7 @@ static void draw_grid(void)
 
 static void clear_background(void)
 {
-	set_render_color_u32(BACKGROUND_COLOR, SDL_ALPHA_OPAQUE);
+	set_render_color_u32(BACKGROUND_COLOR);
 	SDL_RenderClear(renderer);
 }
 

@@ -21,14 +21,15 @@
 #define HEIGHT 720
 #define FPS    30
 
-#define BACKGROUND_COLOR                0x444444
-#define TILE_UNCLICKED_COLOR            0x000000
-#define TILE_UNCLICKED_HIGHLIGHT_COLOR  0x0F0F0F
-#define TILE_CLICKED_COLOR              0xAAAAAA
-#define TILE_CLICKED_MINE_COLOR         0xFF0000
-#define TILE_FLAGGED_COLOR              0x55BBAA
-#define TILE_FLAGGED_HIGHLIGHT_COLOR    0x65CBBA
-#define TILE_NUM_COLOR                  0x00A1BB
+/* SDL_Color format is ABGR on little-endian machines*/
+#define BACKGROUND_COLOR                0xFF444444
+#define TILE_UNCLICKED_COLOR            0xFF000000
+#define TILE_UNCLICKED_HIGHLIGHT_COLOR  0xFF0F0F0F
+#define TILE_CLICKED_COLOR              0xFFAAAAAA
+#define TILE_CLICKED_MINE_COLOR         0xFF0000FF
+#define TILE_FLAGGED_COLOR              0xFFAABB55
+#define TILE_FLAGGED_HIGHLIGHT_COLOR    0xFFBACB65
+#define TILE_NUM_COLOR                  0xFFBBA100
 
 #define DEFAULT_ROWS   9
 #define DEFAULT_COLS   9

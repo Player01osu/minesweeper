@@ -1,33 +1,15 @@
 #include "colors.h"
 #include "state.h"
 
-Color u32_to_color(const Uint32 rgb)
+void set_render_color_u32(const Uint32 abgr)
 {
-	const Uint8 r = (rgb & 0xFF0000) >> 16;
-	const Uint8 g = (rgb & 0x00FF00) >> 8;
-	const Uint8 b = (rgb & 0x0000FF);
-
-	const Color color = {
-		r,
-		g,
-		b,
-	};
-	return color;
-}
-
-void u32_color(const Uint32 rgb, Uint8 *r, Uint8 *g, Uint8 *b)
-{
-	const Color color = u32_to_color(rgb);
-	*r = color.r;
-	*g = color.g;
-	*b = color.b;
-}
-
-void set_render_color_u32(const Uint32 rgb, const Uint8 alpha)
-{
-	Uint8 r, g, b;
-	u32_color(rgb, &r, &g, &b);
-	if (SDL_SetRenderDrawColor(renderer, r, g, b, alpha) < 0) {
+	Uint8 r, g, b, a;
+	SDL_Color color = *(SDL_Color *) &abgr;
+	r = color.r;
+	g = color.g;
+	b = color.b;
+	a = color.a;
+	if (SDL_SetRenderDrawColor(renderer, r, g, b, a) < 0) {
 		fprintf(stderr, "ERROR:Failed to set draw color:%s\n", SDL_GetError());
 		exit(1);
 	}
