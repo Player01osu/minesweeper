@@ -477,9 +477,7 @@ int main(int argc, char **argv)
 				game.pan_x = delta_x;
 				game.pan_y = delta_y;
 
-				if (delta_x != 0 || delta_y != 0) {
-					panned = true;
-				}
+				panned = delta_x != 0 || delta_y != 0;
 			}
 		}
 
