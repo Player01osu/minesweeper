@@ -37,6 +37,14 @@
 #define PAD_INNER      0
 #define PAD_OUTER      30
 
+#define MIN(a, b) (a) > (b) ? (b) : (a)
+
+#define unimplemented()                                                                                \
+	do {                                                                                           \
+		fprintf(stderr, "%s:%d:ERROR: %s(..) UNIMPLEMENTED \n", __FILE__, __LINE__, __func__); \
+		exit(1);                                                                               \
+	} while (0)
+
 #define for_each_tile(tile) \
 	for (size_t _row = 0; _row < game.rows; ++_row) \
 		for (size_t _col = 0; _col < game.cols; ++_col) \

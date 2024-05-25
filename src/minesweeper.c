@@ -11,11 +11,6 @@
 #include "colors.h"
 #include "mines.h"
 
-#define MIN(a, b) a > b ? b : a
-
-#define unimplemented fprintf(stderr, "%s:%d:ERROR: %s(..) UNIMPLEMENTED\n", __FILE__, __LINE__, __func__);\
-	exit(1);
-
 SDL_Window *window;
 SDL_Renderer *renderer;
 TextCtx text_ctx;
