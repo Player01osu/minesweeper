@@ -495,11 +495,8 @@ int main(int argc, char **argv)
 			hold = false;
 		}
 
-		if (wheel_y() > 0) {
-			game.scale += 0.1;
-		} else if (wheel_y() < 0) {
-			game.scale -= 0.1;
-		}
+		game.scale += wheel_y() * 0.1;
+
 #if 0				// TODO: Pan to mouse center
 			size_t width_adj = WIDTH * game.scale;
 			size_t height_adj = HEIGHT * game.scale;
