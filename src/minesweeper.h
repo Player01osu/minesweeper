@@ -40,12 +40,12 @@
 #define for_each_tile(tile) \
 	for (size_t _row = 0; _row < game.rows; ++_row) \
 		for (size_t _col = 0; _col < game.cols; ++_col) \
-			if ((tile = &game.tiles[_row][_col]))
+			if (((tile) = &game.tiles[_row][_col]))
 
 #define for_each_enum_tile(row, col, tile) \
-	for (row = 0; row < game.rows; ++row) \
-		for (col = 0; col < game.cols; ++col) \
-			if ((tile = &game.tiles[row][col]))
+	for ((row) = 0; (row) < game.rows; ++(row)) \
+		for ((col) = 0; (col) < game.cols; ++(col)) \
+			if (((tile) = &game.tiles[(row)][(col)]))
 
 typedef enum {
 	StatePlaying,
