@@ -54,13 +54,13 @@ void ctx_init(size_t rows, size_t cols, size_t mines)
 	}
 	renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
 	if (!renderer) {
-		fprintf(stderr, "Failed to init renderer");
+		fprintf(stderr, "ERROR:Failed to init renderer:%s\n", SDL_GetError());
 		SDL_DestroyWindow(window);
 		exit(1);
 	}
 	TTF_Font *font = TTF_OpenFont("/usr/share/fonts/TTF/FiraMono-Medium.ttf", 240);
 	if (!font) {
-		fprintf(stderr, "Failed to init font");
+		fprintf(stderr, "ERROR:Failed to init font:%s\n", SDL_GetError());
 		SDL_DestroyWindow(window);
 		SDL_DestroyRenderer(renderer);
 		exit(1);
@@ -75,12 +75,12 @@ void ctx_init(size_t rows, size_t cols, size_t mines)
 		*str = '0' + i;
 		SDL_Surface *surface = TTF_RenderText_Solid(font, str, white);
 		if (!surface) {
-			fprintf(stderr, "ERROR: Failed to create surface: %s\n", SDL_GetError());
+			fprintf(stderr, "ERROR:Failed to create surface:%s\n", SDL_GetError());
 			exit(1);
 		}
 		SDL_Texture *num_text = SDL_CreateTextureFromSurface(renderer, surface);
 		if (!num_text) {
-			fprintf(stderr, "ERROR: Failed to create num texture: %s\n", SDL_GetError());
+			fprintf(stderr, "ERROR:Failed to create num texture:%s\n", SDL_GetError());
 			exit(1);
 		}
 		text_ctx.num_texts[i] = num_text;
