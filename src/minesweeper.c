@@ -147,7 +147,7 @@ static void click_tile(const size_t row, const size_t col)
 		toggle_tile(row, col);
 		break;
 	case TileStateClicked:
-		if (sum_surround_flagged(row, col) == tile->surround_mines) {
+		if (sum_surround(row, col, tile_is_flagged) == tile->surround_mines) {
 			expand_cavern(row, col);
 		}
 		break;
@@ -276,6 +276,7 @@ static void draw_grid(void)
 				set_render_color_u32(TILE_CLICKED_COLOR, SDL_ALPHA_OPAQUE);
 				SDL_RenderFillRect(renderer, &rect);
 
+				/* Don't draw number when tile isn't surrounded by mines */
 				if (tile->surround_mines == 0) continue;
 
 				SDL_RenderCopy(renderer, text_ctx.num_texts[tile->surround_mines], NULL, &rect);

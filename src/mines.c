@@ -1,16 +1,7 @@
 #include "mines.h"
 #include <time.h>
 
-static size_t clamp(const size_t num, const size_t l, const size_t h)
-{
-	if (num < l)
-		return l;
-	if (num > h)
-		return h;
-	return num;
-}
-
-static Uint8 tile_is_mine(const Sint32 row, const Sint32 col)
+Uint8 tile_is_mine(const Sint32 row, const Sint32 col)
 {
 	Tile **tiles = game.tiles;
 	if (!is_valid_idx(row, col)) return 0;
@@ -18,61 +9,32 @@ static Uint8 tile_is_mine(const Sint32 row, const Sint32 col)
 	return tiles[row][col].mine;
 }
 
-static Uint8 tile_is_flagged(const Sint32 row, const Sint32 col)
+Uint8 tile_is_flagged(const Sint32 row, const Sint32 col)
 {
 	Tile **tiles = game.tiles;
-	if (!is_valid_idx(row, col)) {
-		return 0;
-	}
+	if (!is_valid_idx(row, col)) return 0;
 
 	return tiles[row][col].state == TileStateFlagged;
 }
 
-static Uint8 sum_surround_mines(const Sint32 row, const Sint32 col)
+Uint8 sum_surround(const Sint32 row, const Sint32 col,
+		   Uint8 (*tile_count)(const Sint32, const Sint32))
 {
-	Tile **tiles = game.tiles;
-	const size_t cols = game.cols;
-	const size_t rows = game.rows;
 	Uint8 sum = 0;
 
 	/* Top row */
-	sum += tile_is_mine(row - 1, (col - 1));
-	sum += tile_is_mine(row - 1, (col - 0));
-	sum += tile_is_mine(row - 1, (col + 1));
+	sum += tile_count(row - 1, (col - 1));
+	sum += tile_count(row - 1, (col - 0));
+	sum += tile_count(row - 1, (col + 1));
 
 	/* Middle row */
-	sum += tile_is_mine(row - 0, (col - 1));
-	sum += tile_is_mine(row - 0, (col + 1));
+	sum += tile_count(row - 0, (col - 1));
+	sum += tile_count(row - 0, (col + 1));
 
 	/* Bottom row */
-	sum += tile_is_mine(row + 1, (col - 1));
-	sum += tile_is_mine(row + 1, (col - 0));
-	sum += tile_is_mine(row + 1, (col + 1));
-
-	return sum;
-}
-
-// TODO: Generalize this (maybe function pointer)
-Uint8 sum_surround_flagged(const Sint32 row, const Sint32 col)
-{
-	Tile **tiles = game.tiles;
-	const size_t cols = game.cols;
-	const size_t rows = game.rows;
-	Uint8 sum = 0;
-
-	/* Top row */
-	sum += tile_is_flagged(row - 1, (col - 1));
-	sum += tile_is_flagged(row - 1, (col - 0));
-	sum += tile_is_flagged(row - 1, (col + 1));
-
-	/* Middle row */
-	sum += tile_is_flagged(row - 0, (col - 1));
-	sum += tile_is_flagged(row - 0, (col + 1));
-
-	/* Bottom row */
-	sum += tile_is_flagged(row + 1, (col - 1));
-	sum += tile_is_flagged(row + 1, (col - 0));
-	sum += tile_is_flagged(row + 1, (col + 1));
+	sum += tile_count(row + 1, (col - 1));
+	sum += tile_count(row + 1, (col - 0));
+	sum += tile_count(row + 1, (col + 1));
 
 	return sum;
 }
@@ -85,9 +47,8 @@ void calculate_surround(void)
 
 	for (size_t row = 0; row < rows; ++row) {
 		for (size_t col = 0; col < cols; ++col) {
-			if (tiles[row][col].mine)
-				continue;
-			tiles[row][col].surround_mines = sum_surround_mines(row, col);
+			if (tiles[row][col].mine) continue;
+			tiles[row][col].surround_mines = sum_surround(row, col, tile_is_mine);
 		}
 	}
 }
@@ -95,8 +56,6 @@ void calculate_surround(void)
 void generate_mines(void)
 {
 	Tile **tiles = game.tiles;
-	const size_t cols = game.cols;
-	const size_t rows = game.rows;
 
 	//srand(time(0));
 	for (size_t i = 0; i < game.mines; ++i) {
@@ -105,9 +64,7 @@ void generate_mines(void)
 
 		while (tiles[row][col].mine) {
 			col = (col + 1) % game.cols;
-			if (col == 0) {
-				row = (row + 1) % game.rows;
-			}
+			if (col == 0) row = (row + 1) % game.rows;
 		}
 		tiles[row][col].mine = true;
 	}
@@ -119,7 +76,6 @@ void offset_mines(const size_t row, const size_t col)
 {
 	Tile **tiles = game.tiles;
 	const size_t cols = game.cols;
-	const size_t rows = game.rows;
 
 	Uint8 offset = 0;
 	for (size_t i = 0; i < cols && tiles[row][(col + offset) % cols].mine; ++i) {
