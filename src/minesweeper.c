@@ -113,14 +113,11 @@ static void coord_to_index(const Sint32 x, const Sint32 y, size_t *row, size_t *
 
 static void lose_game(void)
 {
-	Tile **tiles = game.tiles;
+	Tile *tile;
 	game.state = StateLose;
 
-	for (size_t row = 0; row < game.rows; ++row) {
-		for (size_t col = 0; col < game.cols; ++col) {
-			Tile *tile = &tiles[row][col];
-			if (tile->mine) tile->state = TileStateClicked;
-		}
+	for_each_tile(tile) {
+		if (tile->mine) tile->state = TileStateClicked;
 	}
 	printf("You Lost\n");
 }
@@ -227,71 +224,67 @@ static void create_grid(void)
 	opening = false;
 	game.state = StatePlaying;
 	game.tiles_clicked = 0;
-	for (size_t row = 0; row < game.rows; ++row) {
-		for (size_t col = 0; col < game.cols; ++col) {
-			game.tiles[row][col] = (Tile){
-				.rect = grid_tile(row, col),
-				.state = TileStateUnclicked,
-				.mine = false,
-				.surround_mines = 0,
-			};
-		}
+	size_t row, col;
+	Tile *tile;
+	for_each_enum_tile(row, col, tile) {
+		*tile = (Tile){
+			.rect = grid_tile(row, col),
+			.state = TileStateUnclicked,
+			.mine = false,
+			.surround_mines = 0,
+		};
 	}
 	generate_mines();
 }
 static void draw_grid(void)
 {
-	Tile **tiles = game.tiles;
-	const size_t rows = game.rows;
-	const size_t cols = game.cols;
-	for (size_t row = 0; row < rows; ++row) {
-		for (size_t col = 0; col < cols; ++col) {
-			Tile *tile = &tiles[row][col];
-			SDL_Rect rect = tile->rect;
+	size_t row, col;
+	Tile *tile;
+	for_each_enum_tile(row, col, tile) {
+		SDL_Rect rect = tile->rect;
 
-			rect.w = ceil((float) tile->rect.w * game.scale);
-			rect.h = ceil((float) tile->rect.h * game.scale);
-			rect.x = ceil((float) tile->rect.x * game.scale - game.pan_x);
-			rect.y = ceil((float) tile->rect.y * game.scale - game.pan_y);
+		rect.w = ceil((float) tile->rect.w * game.scale);
+		rect.h = ceil((float) tile->rect.h * game.scale);
+		rect.x = ceil((float) tile->rect.x * game.scale - game.pan_x);
+		rect.y = ceil((float) tile->rect.y * game.scale - game.pan_y);
 
-			switch (tile->state) {
-			case TileStateFlagged:
-				if (game.mouse_row == row && game.mouse_col == col) {
-					set_render_color_u32(TILE_FLAGGED_HIGHLIGHT_COLOR);
-				} else {
-					set_render_color_u32(TILE_FLAGGED_COLOR);
-				}
-				if (SDL_RenderFillRect(renderer, &rect) < 0) {
-					fprintf(stderr, "ERROR: Failed to fill tile: %s", SDL_GetError());
-					exit(1);
-				}
-				break;
-			case TileStateClicked:
-				if (tile->mine) {
-					set_render_color_u32(TILE_CLICKED_MINE_COLOR);
-					SDL_RenderFillRect(renderer, &rect);
-					continue;
-				}
-				set_render_color_u32(TILE_CLICKED_COLOR);
-				SDL_RenderFillRect(renderer, &rect);
-
-				/* Don't draw number when tile isn't surrounded by mines */
-				if (tile->surround_mines == 0) continue;
-
-				SDL_RenderCopy(renderer, text_ctx.num_texts[tile->surround_mines], NULL, &rect);
-				break;
-			case TileStateUnclicked:
-				if (game.mouse_row == row && game.mouse_col == col) {
-					set_render_color_u32(TILE_UNCLICKED_HIGHLIGHT_COLOR);
-				} else {
-					set_render_color_u32(TILE_UNCLICKED_COLOR);
-				}
-				if (SDL_RenderFillRect(renderer, &rect) < 0) {
-					fprintf(stderr, "ERROR: Failed to fill tile: %s", SDL_GetError());
-					exit(1);
-				}
-				break;
+		switch (tile->state) {
+		case TileStateFlagged:
+			if (game.mouse_row == row && game.mouse_col == col) {
+				set_render_color_u32(TILE_FLAGGED_HIGHLIGHT_COLOR);
+			} else {
+				set_render_color_u32(TILE_FLAGGED_COLOR);
 			}
+			if (SDL_RenderFillRect(renderer, &rect) < 0) {
+				fprintf(stderr, "ERROR: Failed to fill tile: %s", SDL_GetError());
+				exit(1);
+			}
+			break;
+		case TileStateClicked:
+			if (tile->mine) {
+				set_render_color_u32(TILE_CLICKED_MINE_COLOR);
+				SDL_RenderFillRect(renderer, &rect);
+				continue;
+			}
+			set_render_color_u32(TILE_CLICKED_COLOR);
+			SDL_RenderFillRect(renderer, &rect);
+
+			/* Don't draw number when tile isn't surrounded by mines */
+			if (tile->surround_mines == 0) continue;
+
+			SDL_RenderCopy(renderer, text_ctx.num_texts[tile->surround_mines], NULL, &rect);
+			break;
+		case TileStateUnclicked:
+			if (game.mouse_row == row && game.mouse_col == col) {
+				set_render_color_u32(TILE_UNCLICKED_HIGHLIGHT_COLOR);
+			} else {
+				set_render_color_u32(TILE_UNCLICKED_COLOR);
+			}
+			if (SDL_RenderFillRect(renderer, &rect) < 0) {
+				fprintf(stderr, "ERROR: Failed to fill tile: %s", SDL_GetError());
+				exit(1);
+			}
+			break;
 		}
 	}
 }

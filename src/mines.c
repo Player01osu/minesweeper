@@ -41,15 +41,12 @@ Uint8 sum_surround(const Sint32 row, const Sint32 col,
 
 void calculate_surround(void)
 {
-	Tile **tiles = game.tiles;
-	const size_t cols = game.cols;
-	const size_t rows = game.rows;
+	size_t row, col;
+	Tile *tile;
 
-	for (size_t row = 0; row < rows; ++row) {
-		for (size_t col = 0; col < cols; ++col) {
-			if (tiles[row][col].mine) continue;
-			tiles[row][col].surround_mines = sum_surround(row, col, tile_is_mine);
-		}
+	for_each_enum_tile(row, col, tile) {
+		if (tile->mine) continue;
+		tile->surround_mines = sum_surround(row, col, tile_is_mine);
 	}
 }
 
